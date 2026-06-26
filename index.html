@@ -4,1666 +4,433 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>GreenFarm INTL · Operations Dashboard</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700&display=swap" rel="stylesheet"/>
 <style>
-/* ===== CSS VARIABLES ===== */
-:root {
-  --gf-dark: #0d5c2e;
-  --gf-mid: #1a7a3f;
-  --gf-bright: #2ecc71;
-  --gf-light: #a8e6c1;
-  --gf-accent: #f0faf4;
-  --gf-gold: #f5a623;
-
-  /* LIGHT THEME */
-  --bg-page: #f0faf4;
-  --bg-card: #ffffff;
-  --bg-header: #0d5c2e;
-  --bg-sidebar: #ffffff;
-  --bg-chip: #e8f5ee;
-  --text-primary: #0d2e1a;
-  --text-secondary: #3d6b50;
-  --text-muted: #6b9a7e;
-  --text-on-dark: #ffffff;
-  --border: #c8e8d5;
-  --border-strong: #9dd4b4;
-  --shadow: 0 2px 12px rgba(13,92,46,0.08);
-  --shadow-card: 0 4px 20px rgba(13,92,46,0.10);
-  --kpi-bg: linear-gradient(135deg, #0d5c2e 0%, #1a7a3f 100%);
-  --kpi-text: #ffffff;
-  --chart-grid: rgba(13,92,46,0.08);
-  --input-bg: #f0faf4;
-  --filter-header-bg: #0d5c2e;
-  --filter-header-text: #ffffff;
-  --toggle-bg: #e8f5ee;
-  --scroll-thumb: #9dd4b4;
-  --loading-bg: #f0faf4;
-}
-
-body.dark {
-  --bg-page: #0a1a10;
-  --bg-card: #111f16;
-  --bg-header: #071209;
-  --bg-sidebar: #0e1a13;
-  --bg-chip: #162a1e;
-  --text-primary: #e8f5ee;
-  --text-secondary: #a8d4b8;
-  --text-muted: #6b9a7e;
-  --text-on-dark: #e8f5ee;
-  --border: #1e3a28;
-  --border-strong: #2a5038;
-  --shadow: 0 2px 12px rgba(0,0,0,0.4);
-  --shadow-card: 0 4px 20px rgba(0,0,0,0.5);
-  --kpi-bg: linear-gradient(135deg, #0f4a24 0%, #1a6634 100%);
-  --kpi-text: #e8f5ee;
-  --chart-grid: rgba(168,212,184,0.07);
-  --input-bg: #0e1a13;
-  --filter-header-bg: #071a0e;
-  --filter-header-text: #a8d4b8;
-  --toggle-bg: #162a1e;
-  --scroll-thumb: #2a5038;
-  --loading-bg: #0a1a10;
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  font-family: 'Inter', sans-serif;
-  background: var(--bg-page);
-  color: var(--text-primary);
-  min-height: 100vh;
-  transition: background 0.3s, color 0.3s;
-}
-
-/* ===== LOADING SCREEN ===== */
-#loading-screen {
-  position: fixed; inset: 0;
-  background: var(--loading-bg);
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  z-index: 9999;
-  gap: 20px;
-}
-.loader-logo { width: 90px; animation: pulse 1.5s ease-in-out infinite; }
-.loader-text { font-family: 'Poppins', sans-serif; font-size: 1.1rem; color: var(--gf-mid); font-weight: 600; }
-.loader-bar { width: 220px; height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; }
-.loader-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--gf-dark), var(--gf-bright)); border-radius: 99px; animation: load 2s ease forwards; }
-@keyframes load { to { width: 100%; } }
-@keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.06);opacity:0.85} }
-
-/* ===== LAYOUT ===== */
-.app-layout { display: flex; min-height: 100vh; }
-
-/* ===== SIDEBAR ===== */
-.sidebar {
-  width: 280px;
-  min-width: 280px;
-  background: var(--bg-sidebar);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  transition: background 0.3s, border-color 0.3s;
-  scrollbar-width: thin;
-  scrollbar-color: var(--scroll-thumb) transparent;
-}
-.sidebar-header {
-  background: var(--bg-header);
-  padding: 20px 18px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-}
-.sidebar-logo { width: 44px; height: 44px; border-radius: 10px; background: white; padding: 4px; object-fit: contain; }
-.sidebar-brand { display: flex; flex-direction: column; }
-.sidebar-brand-name { font-family: 'Poppins', sans-serif; font-size: 0.78rem; font-weight: 700; color: #fff; letter-spacing: 0.04em; text-transform: uppercase; line-height: 1.1; }
-.sidebar-brand-sub { font-size: 0.63rem; color: rgba(255,255,255,0.55); letter-spacing: 0.08em; text-transform: uppercase; }
-
-.sidebar-section { padding: 14px 16px 6px; }
-.sidebar-section-title {
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 10px;
-  padding-left: 2px;
-}
-
-.filter-group { margin-bottom: 14px; }
-.filter-label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 5px;
-  display: block;
-}
-
-/* Date Range */
-.date-inputs { display: flex; flex-direction: column; gap: 5px; }
-.date-inputs input {
-  width: 100%;
-  padding: 7px 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-family: 'Inter', sans-serif;
-  background: var(--input-bg);
-  color: var(--text-primary);
-  transition: border-color 0.2s;
-}
-.date-inputs input:focus { outline: none; border-color: var(--gf-mid); }
-
-/* Multi-select custom */
-.custom-select-wrapper { position: relative; }
-.custom-select-trigger {
-  width: 100%;
-  padding: 7px 30px 7px 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-family: 'Inter', sans-serif;
-  background: var(--input-bg);
-  color: var(--text-primary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  transition: border-color 0.2s;
-  user-select: none;
-}
-.custom-select-trigger:hover { border-color: var(--gf-mid); }
-.custom-select-trigger.open { border-color: var(--gf-mid); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
-.select-arrow { font-size: 0.65rem; color: var(--text-muted); transition: transform 0.2s; }
-.custom-select-trigger.open .select-arrow { transform: rotate(180deg); }
-
-.custom-dropdown {
-  position: absolute; top: 100%; left: 0; right: 0;
-  background: var(--bg-card);
-  border: 1px solid var(--gf-mid);
-  border-top: none;
-  border-radius: 0 0 8px 8px;
-  max-height: 160px;
-  overflow-y: auto;
-  z-index: 100;
-  display: none;
-  scrollbar-width: thin;
-  scrollbar-color: var(--scroll-thumb) transparent;
-}
-.custom-dropdown.open { display: block; }
-.dropdown-search {
-  padding: 6px 8px;
-  border-bottom: 1px solid var(--border);
-  position: sticky; top: 0;
-  background: var(--bg-card);
-}
-.dropdown-search input {
-  width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 4px 8px;
-  font-size: 0.72rem;
-  background: var(--input-bg);
-  color: var(--text-primary);
-  font-family: 'Inter', sans-serif;
-}
-.dropdown-search input:focus { outline: none; }
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  font-size: 0.73rem;
-  cursor: pointer;
-  color: var(--text-primary);
-  transition: background 0.15s;
-}
-.dropdown-item:hover { background: var(--bg-chip); }
-.dropdown-item input[type="checkbox"] { accent-color: var(--gf-mid); cursor: pointer; }
-
-/* Price Range */
-.range-inputs { display: flex; align-items: center; gap: 6px; }
-.range-inputs input {
-  flex: 1;
-  padding: 7px 8px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 0.73rem;
-  font-family: 'Inter', sans-serif;
-  background: var(--input-bg);
-  color: var(--text-primary);
-}
-.range-inputs input:focus { outline: none; border-color: var(--gf-mid); }
-.range-sep { font-size: 0.7rem; color: var(--text-muted); }
-
-/* Selected chips */
-.chips-container { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; min-height: 0; }
-.chip {
-  background: var(--bg-chip);
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-  padding: 2px 8px 2px 7px;
-  border-radius: 20px;
-  font-size: 0.65rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.chip-remove { cursor: pointer; color: var(--text-muted); font-size: 0.75rem; line-height: 1; }
-.chip-remove:hover { color: #c0392b; }
-
-/* Apply + Reset Buttons */
-.filter-actions { padding: 14px 16px; display: flex; gap: 8px; }
-.btn-apply {
-  flex: 1;
-  padding: 10px;
-  background: linear-gradient(135deg, var(--gf-dark), var(--gf-mid));
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: 'Inter', sans-serif;
-  letter-spacing: 0.03em;
-  transition: opacity 0.2s, transform 0.15s;
-}
-.btn-apply:hover { opacity: 0.92; transform: translateY(-1px); }
-.btn-apply:active { transform: translateY(0); }
-.btn-reset {
-  padding: 10px 14px;
-  background: var(--bg-chip);
-  color: var(--text-secondary);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: 'Inter', sans-serif;
-  transition: background 0.2s;
-}
-.btn-reset:hover { background: var(--border); }
-
-/* Active filter count badge */
-.filter-badge {
-  background: var(--gf-gold);
-  color: #fff;
-  border-radius: 99px;
-  font-size: 0.6rem;
-  font-weight: 700;
-  padding: 1px 6px;
-  margin-left: 6px;
-  display: inline-block;
-}
-
-.sidebar-divider { height: 1px; background: var(--border); margin: 4px 16px; }
-
-/* ===== MAIN CONTENT ===== */
-.main-content { flex: 1; overflow-x: hidden; display: flex; flex-direction: column; min-width: 0; }
-
-/* ===== TOP BAR ===== */
-.topbar {
-  background: var(--bg-header);
-  padding: 0 24px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-}
-.topbar-title {
-  display: flex; align-items: center; gap: 10px;
-}
-.topbar-heading {
-  font-family: 'Poppins', sans-serif;
-  font-size: 1rem;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: 0.01em;
-}
-.topbar-sub {
-  font-size: 0.7rem;
-  color: rgba(255,255,255,0.5);
-  letter-spacing: 0.05em;
-}
-.topbar-right { display: flex; align-items: center; gap: 14px; }
-
-/* Theme Toggle */
-.theme-toggle {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 20px;
-  padding: 5px 12px;
-  cursor: pointer;
-  user-select: none;
-  transition: background 0.2s;
-}
-.theme-toggle:hover { background: rgba(255,255,255,0.18); }
-.theme-toggle-icon { font-size: 0.85rem; }
-.theme-toggle-label { font-size: 0.72rem; font-weight: 600; color: rgba(255,255,255,0.85); }
-
-.last-updated {
-  font-size: 0.68rem;
-  color: rgba(255,255,255,0.45);
-  white-space: nowrap;
-}
-
-/* ===== DASHBOARD BODY ===== */
-.dashboard-body { padding: 22px 24px 30px; flex: 1; }
-
-/* Active Filters Bar */
-.active-filters-bar {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 18px;
-  font-size: 0.72rem;
-}
-.active-filters-bar.hidden { display: none; }
-.af-label { color: var(--text-muted); font-weight: 600; white-space: nowrap; }
-.af-chip {
-  background: var(--bg-chip);
-  border: 1px solid var(--gf-bright);
-  color: var(--gf-dark);
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 0.67rem;
-  font-weight: 600;
-}
-body.dark .af-chip { color: var(--gf-bright); }
-
-/* ===== KPI GRID ===== */
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-bottom: 22px;
-}
-.kpi-card {
-  background: var(--kpi-bg);
-  border-radius: 16px;
-  padding: 18px 20px;
-  color: var(--kpi-text);
-  position: relative;
-  overflow: hidden;
-  box-shadow: var(--shadow-card);
-  transition: transform 0.2s;
-}
-.kpi-card:hover { transform: translateY(-2px); }
-.kpi-card::before {
-  content: '';
-  position: absolute;
-  top: -20px; right: -20px;
-  width: 80px; height: 80px;
-  background: rgba(255,255,255,0.06);
-  border-radius: 50%;
-}
-.kpi-card.alt { background: linear-gradient(135deg, #0a4a22 0%, #136030 100%); }
-.kpi-card.gold { background: linear-gradient(135deg, #b5780f 0%, #d4960c 100%); }
-.kpi-card.teal { background: linear-gradient(135deg, #0a6b3a 0%, #0e8848 100%); }
-
-.kpi-icon { font-size: 1.5rem; margin-bottom: 8px; opacity: 0.9; }
-.kpi-label { font-size: 0.67rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.72; margin-bottom: 4px; }
-.kpi-value { font-family: 'Poppins', sans-serif; font-size: 1.55rem; font-weight: 700; line-height: 1; }
-.kpi-sub { font-size: 0.68rem; opacity: 0.65; margin-top: 6px; }
-.kpi-change {
-  font-size: 0.7rem;
-  font-weight: 700;
-  margin-top: 4px;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
-.kpi-change.up { color: #a8f0c6; }
-.kpi-change.down { color: #fca5a5; }
-
-/* ===== CHARTS GRID ===== */
-.charts-section-title {
-  font-family: 'Poppins', sans-serif;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 12px;
-  padding-left: 2px;
-  border-left: 3px solid var(--gf-bright);
-  padding-left: 10px;
-}
-
-.charts-row {
-  display: grid;
-  gap: 14px;
-  margin-bottom: 14px;
-}
-.charts-row.cols-3 { grid-template-columns: repeat(3, 1fr); }
-.charts-row.cols-2-1 { grid-template-columns: 2fr 1fr; }
-.charts-row.cols-1-2 { grid-template-columns: 1fr 2fr; }
-.charts-row.cols-2 { grid-template-columns: repeat(2, 1fr); }
-.charts-row.cols-4 { grid-template-columns: repeat(4, 1fr); }
-
-.chart-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 18px 18px 14px;
-  box-shadow: var(--shadow);
-  transition: background 0.3s, border-color 0.3s, box-shadow 0.2s;
-  display: flex;
-  flex-direction: column;
-}
-.chart-card:hover { box-shadow: var(--shadow-card); }
-.chart-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 12px;
-  gap: 10px;
-}
-.chart-title {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1.2;
-}
-.chart-subtitle { font-size: 0.67rem; color: var(--text-muted); margin-top: 2px; }
-.chart-badge {
-  background: var(--bg-chip);
-  color: var(--text-secondary);
-  border-radius: 6px;
-  padding: 2px 8px;
-  font-size: 0.62rem;
-  font-weight: 700;
-  white-space: nowrap;
-  border: 1px solid var(--border);
-}
-.chart-canvas-wrap { flex: 1; position: relative; min-height: 0; }
-canvas { max-width: 100%; }
-
-/* Table chart */
-.table-chart {
-  overflow-x: auto;
-  font-size: 0.73rem;
-}
-.table-chart table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.table-chart th {
-  text-align: left;
-  padding: 6px 10px;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  border-bottom: 2px solid var(--border);
-}
-.table-chart td {
-  padding: 7px 10px;
-  border-bottom: 1px solid var(--border);
-  color: var(--text-primary);
-}
-.table-chart tr:last-child td { border-bottom: none; }
-.table-chart tr:hover td { background: var(--bg-chip); }
-.rank-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px; height: 20px;
-  border-radius: 50%;
-  font-size: 0.6rem;
-  font-weight: 700;
-  background: var(--gf-dark);
-  color: white;
-}
-.bar-mini {
-  height: 6px;
-  background: linear-gradient(90deg, var(--gf-dark), var(--gf-bright));
-  border-radius: 99px;
-  transition: width 0.6s ease;
-}
-
-/* ===== FOOTER ===== */
-.footer {
-  background: var(--bg-card);
-  border-top: 1px solid var(--border);
-  padding: 14px 24px;
-  text-align: center;
-  font-size: 0.67rem;
-  color: var(--text-muted);
-}
-.footer strong { color: var(--gf-mid); }
-
-/* ===== SCROLLBAR ===== */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 10px; }
-
-/* ===== NO DATA ===== */
-.no-data {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 120px;
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  font-style: italic;
-}
+:root{--gd:#0d5c2e;--gm:#1a7a3f;--gb:#2ecc71;--go:#f5a623;
+--bg:#f0faf4;--card:#fff;--hdr:#0d5c2e;--sb:#fff;--chip:#e8f5ee;
+--tp:#0d2e1a;--ts:#3d6b50;--tm:#6b9a7e;--br:#c8e8d5;--brS:#9dd4b4;
+--sh:0 2px 12px rgba(13,92,46,.08);--shC:0 4px 20px rgba(13,92,46,.10);
+--kbg:linear-gradient(135deg,#0d5c2e,#1a7a3f);--ib:#f0faf4;--gr:rgba(13,92,46,.08);--tc:#3d6b50}
+body.dark{--bg:#0a1a10;--card:#111f16;--hdr:#071209;--sb:#0e1a13;--chip:#162a1e;
+--tp:#e8f5ee;--ts:#a8d4b8;--tm:#6b9a7e;--br:#1e3a28;--brS:#2a5038;
+--sh:0 2px 12px rgba(0,0,0,.4);--shC:0 4px 20px rgba(0,0,0,.5);
+--kbg:linear-gradient(135deg,#0f4a24,#1a6634);--ib:#0e1a13;--gr:rgba(168,212,184,.07);--tc:#a8d4b8}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tp);min-height:100vh;transition:background .3s,color .3s}
+.layout{display:flex;min-height:100vh}
+/* SIDEBAR */
+.sb{width:272px;min-width:272px;background:var(--sb);border-right:1px solid var(--br);display:flex;flex-direction:column;overflow-y:auto;position:sticky;top:0;height:100vh;scrollbar-width:thin;scrollbar-color:var(--brS) transparent}
+.sb-hdr{background:var(--hdr);padding:18px 16px 14px;display:flex;align-items:center;gap:11px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-logo{width:42px;height:42px;border-radius:9px;background:#fff;padding:3px;object-fit:contain}
+.sb-name{font-family:'Poppins',sans-serif;font-size:.76rem;font-weight:700;color:#fff;letter-spacing:.04em;text-transform:uppercase;line-height:1.1}
+.sb-sub{font-size:.62rem;color:rgba(255,255,255,.5);letter-spacing:.08em;text-transform:uppercase}
+.sb-sec{padding:12px 14px 4px}
+.sb-sec-title{font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--tm);margin-bottom:8px;padding-left:2px}
+.fg{margin-bottom:12px}
+.fl{font-size:.7rem;font-weight:600;color:var(--ts);margin-bottom:4px;display:block}
+.di{display:flex;flex-direction:column;gap:4px}
+.di input,.ri input{width:100%;padding:6px 9px;border:1px solid var(--br);border-radius:7px;font-size:.73rem;font-family:'Inter',sans-serif;background:var(--ib);color:var(--tp);transition:border-color .2s}
+.di input:focus,.ri input:focus{outline:none;border-color:var(--gm)}
+.csw{position:relative}
+.cst{width:100%;padding:6px 28px 6px 9px;border:1px solid var(--br);border-radius:7px;font-size:.73rem;font-family:'Inter',sans-serif;background:var(--ib);color:var(--tp);cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;transition:border-color .2s}
+.cst:hover,.cst.open{border-color:var(--gm)}
+.cst.open{border-bottom-left-radius:0;border-bottom-right-radius:0}
+.arr{font-size:.62rem;color:var(--tm);transition:transform .2s}
+.cst.open .arr{transform:rotate(180deg)}
+.cd{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--gm);border-top:none;border-radius:0 0 7px 7px;max-height:150px;overflow-y:auto;z-index:200;display:none;scrollbar-width:thin;scrollbar-color:var(--brS) transparent}
+.cd.open{display:block}
+.ds{padding:5px 7px;border-bottom:1px solid var(--br);position:sticky;top:0;background:var(--card)}
+.ds input{width:100%;border:1px solid var(--br);border-radius:5px;padding:3px 7px;font-size:.7rem;background:var(--ib);color:var(--tp);font-family:'Inter',sans-serif}
+.ds input:focus{outline:none}
+.ditem{display:flex;align-items:center;gap:7px;padding:5px 9px;font-size:.71rem;cursor:pointer;color:var(--tp);transition:background .15s}
+.ditem:hover{background:var(--chip)}
+.ditem input[type=checkbox]{accent-color:var(--gm);cursor:pointer}
+.ditem label{cursor:pointer;flex:1;font-size:.71rem}
+.ri{display:flex;align-items:center;gap:5px}
+.ri .sep{font-size:.68rem;color:var(--tm)}
+.chips{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
+.chip{background:var(--chip);border:1px solid var(--br);color:var(--ts);padding:2px 7px 2px 6px;border-radius:20px;font-size:.63rem;font-weight:600;display:flex;align-items:center;gap:3px}
+.chipr{cursor:pointer;color:var(--tm);font-size:.72rem}
+.chipr:hover{color:#c0392b}
+.fa{padding:12px 14px;display:flex;gap:7px}
+.ba{flex:1;padding:9px;background:linear-gradient(135deg,var(--gd),var(--gm));color:#fff;border:none;border-radius:9px;font-size:.78rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:.03em;transition:opacity .2s,transform .15s}
+.ba:hover{opacity:.9;transform:translateY(-1px)}
+.br2{padding:9px 12px;background:var(--chip);color:var(--ts);border:1px solid var(--br);border-radius:9px;font-size:.78rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background .2s}
+.br2:hover{background:var(--br)}
+.sdiv{height:1px;background:var(--br);margin:3px 14px}
+/* MAIN */
+.mc{flex:1;overflow-x:hidden;display:flex;flex-direction:column;min-width:0}
+.tb{background:var(--hdr);padding:0 22px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;border-bottom:1px solid rgba(255,255,255,.06)}
+.tb-h{font-family:'Poppins',sans-serif;font-size:.95rem;font-weight:700;color:#fff;letter-spacing:.01em}
+.tb-s{font-size:.68rem;color:rgba(255,255,255,.48);letter-spacing:.05em}
+.tb-r{display:flex;align-items:center;gap:12px}
+.tt{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border-radius:18px;padding:5px 11px;cursor:pointer;user-select:none;transition:background .2s}
+.tt:hover{background:rgba(255,255,255,.18)}
+.tt-l{font-size:.7rem;font-weight:600;color:rgba(255,255,255,.85)}
+.lu{font-size:.66rem;color:rgba(255,255,255,.42);white-space:nowrap}
+.db{padding:20px 22px 28px;flex:1}
+/* AFB */
+.afb{background:var(--card);border:1px solid var(--br);border-radius:11px;padding:9px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px;font-size:.7rem}
+.afb.hidden{display:none}
+.afl{color:var(--tm);font-weight:600;white-space:nowrap}
+.afc{background:var(--chip);border:1px solid var(--gb);color:var(--gd);padding:2px 9px;border-radius:18px;font-size:.65rem;font-weight:600}
+body.dark .afc{color:var(--gb)}
+/* KPI */
+.kg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.kc{background:var(--kbg);border-radius:14px;padding:16px 18px;color:#fff;position:relative;overflow:hidden;box-shadow:var(--shC);transition:transform .2s;cursor:default}
+.kc:hover{transform:translateY(-2px)}
+.kc::before{content:'';position:absolute;top:-18px;right:-18px;width:72px;height:72px;background:rgba(255,255,255,.06);border-radius:50%}
+.kc.alt{background:linear-gradient(135deg,#0a4a22,#136030)}
+.kc.gold{background:linear-gradient(135deg,#b5780f,#d4960c)}
+.kc.teal{background:linear-gradient(135deg,#0a6b3a,#0e8848)}
+.ki{font-size:1.4rem;margin-bottom:6px;opacity:.9}
+.kl{font-size:.64rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;opacity:.7;margin-bottom:3px}
+.kv{font-family:'Poppins',sans-serif;font-size:1.45rem;font-weight:700;line-height:1}
+.ks{font-size:.65rem;opacity:.62;margin-top:5px}
+/* SECTION TITLE */
+.st{font-family:'Poppins',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--tm);margin-bottom:10px;border-left:3px solid var(--gb);padding-left:9px}
+/* CHART ROWS */
+.cr{display:grid;gap:12px;margin-bottom:12px}
+.c3{grid-template-columns:repeat(3,1fr)}
+.c21{grid-template-columns:2fr 1fr}
+.c2{grid-template-columns:repeat(2,1fr)}
+.cc{background:var(--card);border:1px solid var(--br);border-radius:14px;padding:16px 16px 12px;box-shadow:var(--sh);transition:background .3s,border-color .3s,box-shadow .2s;display:flex;flex-direction:column}
+.cc:hover{box-shadow:var(--shC)}
+.ch{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;gap:8px}
+.ct{font-size:.8rem;font-weight:700;color:var(--tp);line-height:1.2}
+.cs{font-size:.65rem;color:var(--tm);margin-top:2px}
+.cb{background:var(--chip);color:var(--ts);border-radius:5px;padding:2px 7px;font-size:.6rem;font-weight:700;white-space:nowrap;border:1px solid var(--br)}
+.cw{flex:1;position:relative;min-height:0}
+canvas{max-width:100%}
+/* TABLE */
+.tc{overflow-x:auto;font-size:.71rem}
+.tc table{width:100%;border-collapse:collapse}
+.tc th{text-align:left;padding:5px 9px;font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tm);border-bottom:2px solid var(--br)}
+.tc td{padding:6px 9px;border-bottom:1px solid var(--br);color:var(--tp)}
+.tc tr:last-child td{border-bottom:none}
+.tc tr:hover td{background:var(--chip)}
+.rb{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;font-size:.58rem;font-weight:700;background:var(--gd);color:#fff}
+.bm{height:5px;background:linear-gradient(90deg,var(--gd),var(--gb));border-radius:99px;transition:width .6s ease}
+/* FOOTER */
+.ft{background:var(--card);border-top:1px solid var(--br);padding:12px 22px;text-align:center;font-size:.65rem;color:var(--tm)}
+.ft strong{color:var(--gm)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--brS);border-radius:10px}
+.fbadge{background:#f5a623;color:#fff;border-radius:99px;font-size:.58rem;font-weight:700;padding:1px 5px;margin-left:5px;display:inline-block}
 </style>
 </head>
 <body>
-
-<!-- LOADING SCREEN -->
-<div id="loading-screen">
-  <img src="Logo_GreenFarm.png" class="loader-logo" onerror="this.style.display='none'"/>
-  <div class="loader-text">Loading Operations Data…</div>
-  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+<div class="layout">
+<!-- SIDEBAR -->
+<aside class="sb">
+  <div class="sb-hdr">
+    <img src="Logo_GreenFarm.png" class="sb-logo" onerror="this.style.background='#1a7a3f'"/>
+    <div><div class="sb-name">GreenFarm INTL</div><div class="sb-sub">Import &amp; Export Corp.</div></div>
+  </div>
+  <div class="sb-sec">
+    <div class="sb-sec-title">Filters <span id="fbadge" class="fbadge" style="display:none"></span></div>
+    <div class="fg"><label class="fl">📅 Date Range</label>
+      <div class="di"><input type="date" id="df"/><input type="date" id="dt"/></div></div>
+    <div class="fg"><label class="fl">🌍 Country</label>
+      <div class="csw"><div class="cst" id="tr-country" onclick="tog('country')"><span id="lb-country">All Countries</span><span class="arr">▼</span></div>
+      <div class="cd" id="dd-country"><div class="ds"><input placeholder="Search…" oninput="fdd('country',this.value)"/></div><div id="op-country"></div></div></div>
+      <div class="chips" id="ch-country"></div></div>
+    <div class="fg"><label class="fl">📦 Category</label>
+      <div class="csw"><div class="cst" id="tr-category" onclick="tog('category')"><span id="lb-category">All Categories</span><span class="arr">▼</span></div>
+      <div class="cd" id="dd-category"><div class="ds"><input placeholder="Search…" oninput="fdd('category',this.value)"/></div><div id="op-category"></div></div></div>
+      <div class="chips" id="ch-category"></div></div>
+    <div class="fg"><label class="fl">🔄 Transaction Type</label>
+      <div class="csw"><div class="cst" id="tr-type" onclick="tog('type')"><span id="lb-type">All Types</span><span class="arr">▼</span></div>
+      <div class="cd" id="dd-type"><div id="op-type"></div></div></div>
+      <div class="chips" id="ch-type"></div></div>
+    <div class="fg"><label class="fl">🏢 Client / Supplier</label>
+      <div class="csw"><div class="cst" id="tr-client" onclick="tog('client')"><span id="lb-client">All Clients</span><span class="arr">▼</span></div>
+      <div class="cd" id="dd-client"><div class="ds"><input placeholder="Search…" oninput="fdd('client',this.value)"/></div><div id="op-client"></div></div></div>
+      <div class="chips" id="ch-client"></div></div>
+    <div class="fg"><label class="fl">💰 Total Value Range (₱)</label>
+      <div class="ri"><input type="number" id="vmin" placeholder="Min"/><span class="sep">—</span><input type="number" id="vmax" placeholder="Max"/></div></div>
+    <div class="fg"><label class="fl">🏷️ Unit Price Range (₱)</label>
+      <div class="ri"><input type="number" id="pmin" placeholder="Min"/><span class="sep">—</span><input type="number" id="pmax" placeholder="Max"/></div></div>
+  </div>
+  <div class="sdiv"></div>
+  <div class="fa"><button class="ba" onclick="applyF()">▶ Apply Filters</button><button class="br2" onclick="resetF()">↺ Reset</button></div>
+</aside>
+<!-- MAIN -->
+<div class="mc">
+  <div class="tb">
+    <div><div class="tb-h">Operations Intelligence Dashboard</div><div class="tb-s">GreenFarm INTL Import &amp; Export Corporation · Malaysia &amp; Philippines</div></div>
+    <div class="tb-r">
+      <span class="lu" id="lu"></span>
+      <div class="tt" onclick="toggleTheme()"><span id="ti">🌙</span><span class="tt-l" id="tl">Dark</span></div>
+    </div>
+  </div>
+  <div class="db">
+    <div class="afb hidden" id="afb"><span class="afl">Active:</span><span id="afc"></span></div>
+    <!-- KPIs -->
+    <div class="kg">
+      <div class="kc"><div class="ki">💰</div><div class="kl">Total Revenue</div><div class="kv" id="k1">—</div><div class="ks" id="k1s"></div></div>
+      <div class="kc alt"><div class="ki">📦</div><div class="kl">Transactions</div><div class="kv" id="k2">—</div><div class="ks" id="k2s"></div></div>
+      <div class="kc teal"><div class="ki">📤</div><div class="kl">Stock OUT Value</div><div class="kv" id="k3">—</div><div class="ks" id="k3s"></div></div>
+      <div class="kc gold"><div class="ki">📥</div><div class="kl">Stock IN Value</div><div class="kv" id="k4">—</div><div class="ks" id="k4s"></div></div>
+      <div class="kc teal"><div class="ki">📊</div><div class="kl">Avg Deal Size</div><div class="kv" id="k5">—</div><div class="ks" id="k5s"></div></div>
+      <div class="kc alt"><div class="ki">🛒</div><div class="kl">Total Qty OUT</div><div class="kv" id="k6">—</div><div class="ks" id="k6s"></div></div>
+      <div class="kc"><div class="ki">📬</div><div class="kl">Total Qty IN</div><div class="kv" id="k7">—</div><div class="ks" id="k7s"></div></div>
+      <div class="kc gold"><div class="ki">🏢</div><div class="kl">Unique Clients</div><div class="kv" id="k8">—</div><div class="ks" id="k8s"></div></div>
+    </div>
+    <!-- ROW 1 -->
+    <div class="st">📈 Revenue &amp; Volume Trends</div>
+    <div class="cr c21" style="margin-bottom:12px">
+      <div class="cc"><div class="ch"><div><div class="ct">Monthly Revenue &amp; Transaction Count</div><div class="cs">Total value (₱) and deal volume over time</div></div><div class="cb" id="b-monthly"></div></div><div class="cw" style="height:200px"><canvas id="c-monthly"></canvas></div></div>
+      <div class="cc"><div class="ch"><div><div class="ct">Stock IN vs OUT Split</div><div class="cs">By total transaction value</div></div></div><div class="cw" style="height:200px"><canvas id="c-donut"></canvas></div></div>
+    </div>
+    <!-- ROW 2 -->
+    <div class="st">📦 Category &amp; Inventory Flow</div>
+    <div class="cr c3" style="margin-bottom:12px">
+      <div class="cc" style="grid-column:span 2"><div class="ch"><div><div class="ct">Stock IN vs OUT Over Time</div><div class="cs">Monthly flow by transaction type (₱)</div></div></div><div class="cw" style="height:190px"><canvas id="c-flow"></canvas></div></div>
+      <div class="cc"><div class="ch"><div><div class="ct">Revenue by Category</div><div class="cs">Top categories by value</div></div></div><div class="cw" style="height:190px"><canvas id="c-cat"></canvas></div></div>
+    </div>
+    <!-- ROW 3 -->
+    <div class="st">👤 Client, Product &amp; Geography</div>
+    <div class="cr c3" style="margin-bottom:12px">
+      <div class="cc"><div class="ch"><div><div class="ct">Top Clients / Suppliers</div><div class="cs">By total transaction value</div></div></div>
+        <div style="height:210px;overflow-y:auto" class="tc"><table><thead><tr><th>#</th><th>Name</th><th>Value</th><th>Share</th></tr></thead><tbody id="t-clients"></tbody></table></div></div>
+      <div class="cc"><div class="ch"><div><div class="ct">Revenue by Country</div><div class="cs">Malaysia vs Philippines</div></div></div><div class="cw" style="height:210px"><canvas id="c-country"></canvas></div></div>
+      <div class="cc"><div class="ch"><div><div class="ct">Category IN vs OUT</div><div class="cs">Stock direction per category (Qty)</div></div></div><div class="cw" style="height:210px"><canvas id="c-catflow"></canvas></div></div>
+    </div>
+    <!-- ROW 4 -->
+    <div class="st">🔬 Product &amp; Pricing Deep Dive</div>
+    <div class="cr c3">
+      <div class="cc"><div class="ch"><div><div class="ct">Top Products by Revenue</div><div class="cs">Products with value data only</div></div></div><div class="cw" style="height:195px"><canvas id="c-prod"></canvas></div></div>
+      <div class="cc"><div class="ch"><div><div class="ct">Quantity Moved by Category</div><div class="cs">Total units IN + OUT per category</div></div></div><div class="cw" style="height:195px"><canvas id="c-qty"></canvas></div></div>
+      <div class="cc"><div class="ch"><div><div class="ct">Transactions by Month</div><div class="cs">Deal count over time</div></div></div><div class="cw" style="height:195px"><canvas id="c-txn"></canvas></div></div>
+    </div>
+  </div>
+  <div class="ft">GreenFarm INTL Import &amp; Export Corporation &nbsp;|&nbsp; Operations Dashboard &nbsp;|&nbsp; Developed by <strong>Jawad Afzaal</strong></div>
 </div>
-
-<!-- APP LAYOUT -->
-<div class="app-layout" id="app-layout" style="opacity:0;transition:opacity 0.5s;">
-
-  <!-- ===== SIDEBAR / FILTERS ===== -->
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <img src="Logo_GreenFarm.png" class="sidebar-logo" onerror="this.style.background='#0d5c2e';this.style.display='flex'"/>
-      <div class="sidebar-brand">
-        <span class="sidebar-brand-name">GreenFarm INTL</span>
-        <span class="sidebar-brand-sub">Import &amp; Export Corp.</span>
-      </div>
-    </div>
-
-    <div class="sidebar-section">
-      <div class="sidebar-section-title">Filters <span id="filter-count-badge" class="filter-badge" style="display:none"></span></div>
-
-      <!-- DATE RANGE -->
-      <div class="filter-group">
-        <label class="filter-label">📅 Date Range</label>
-        <div class="date-inputs">
-          <input type="date" id="date-from" title="From Date"/>
-          <input type="date" id="date-to" title="To Date"/>
-        </div>
-      </div>
-
-      <!-- COUNTRY -->
-      <div class="filter-group">
-        <label class="filter-label">🌍 Country</label>
-        <div class="custom-select-wrapper">
-          <div class="custom-select-trigger" id="trigger-country" onclick="toggleDropdown('country')">
-            <span id="label-country">All Countries</span>
-            <span class="select-arrow">▼</span>
-          </div>
-          <div class="custom-dropdown" id="dropdown-country">
-            <div class="dropdown-search"><input type="text" placeholder="Search…" oninput="filterDropdown('country',this.value)"/></div>
-            <div id="options-country"></div>
-          </div>
-        </div>
-        <div class="chips-container" id="chips-country"></div>
-      </div>
-
-      <!-- CATEGORY -->
-      <div class="filter-group">
-        <label class="filter-label">📦 Category</label>
-        <div class="custom-select-wrapper">
-          <div class="custom-select-trigger" id="trigger-category" onclick="toggleDropdown('category')">
-            <span id="label-category">All Categories</span>
-            <span class="select-arrow">▼</span>
-          </div>
-          <div class="custom-dropdown" id="dropdown-category">
-            <div class="dropdown-search"><input type="text" placeholder="Search…" oninput="filterDropdown('category',this.value)"/></div>
-            <div id="options-category"></div>
-          </div>
-        </div>
-        <div class="chips-container" id="chips-category"></div>
-      </div>
-
-      <!-- AGENT -->
-      <div class="filter-group">
-        <label class="filter-label">👤 Agent</label>
-        <div class="custom-select-wrapper">
-          <div class="custom-select-trigger" id="trigger-agent" onclick="toggleDropdown('agent')">
-            <span id="label-agent">All Agents</span>
-            <span class="select-arrow">▼</span>
-          </div>
-          <div class="custom-dropdown" id="dropdown-agent">
-            <div class="dropdown-search"><input type="text" placeholder="Search…" oninput="filterDropdown('agent',this.value)"/></div>
-            <div id="options-agent"></div>
-          </div>
-        </div>
-        <div class="chips-container" id="chips-agent"></div>
-      </div>
-
-      <!-- TRANSACTION TYPE -->
-      <div class="filter-group">
-        <label class="filter-label">🔄 Transaction Type</label>
-        <div class="custom-select-wrapper">
-          <div class="custom-select-trigger" id="trigger-type" onclick="toggleDropdown('type')">
-            <span id="label-type">All Types</span>
-            <span class="select-arrow">▼</span>
-          </div>
-          <div class="custom-dropdown" id="dropdown-type">
-            <div id="options-type"></div>
-          </div>
-        </div>
-        <div class="chips-container" id="chips-type"></div>
-      </div>
-
-      <!-- TOTAL VALUE RANGE -->
-      <div class="filter-group">
-        <label class="filter-label">💰 Total Value Range (₱)</label>
-        <div class="range-inputs">
-          <input type="number" id="val-min" placeholder="Min"/>
-          <span class="range-sep">—</span>
-          <input type="number" id="val-max" placeholder="Max"/>
-        </div>
-      </div>
-
-      <!-- UNIT PRICE -->
-      <div class="filter-group">
-        <label class="filter-label">🏷️ Unit Price (₱)</label>
-        <div class="range-inputs">
-          <input type="number" id="price-min" placeholder="Min"/>
-          <span class="range-sep">—</span>
-          <input type="number" id="price-max" placeholder="Max"/>
-        </div>
-      </div>
-    </div>
-
-    <div class="sidebar-divider"></div>
-
-    <!-- APPLY / RESET -->
-    <div class="filter-actions">
-      <button class="btn-apply" onclick="applyFilters()">▶ Apply Filters</button>
-      <button class="btn-reset" onclick="resetFilters()">↺ Reset</button>
-    </div>
-  </aside>
-
-  <!-- ===== MAIN CONTENT ===== -->
-  <div class="main-content">
-
-    <!-- TOP BAR -->
-    <div class="topbar">
-      <div class="topbar-title">
-        <div>
-          <div class="topbar-heading">Operations Intelligence Dashboard</div>
-          <div class="topbar-sub">GreenFarm INTL Import &amp; Export Corporation</div>
-        </div>
-      </div>
-      <div class="topbar-right">
-        <span class="last-updated" id="last-updated-text"></span>
-        <div class="theme-toggle" onclick="toggleTheme()">
-          <span class="theme-toggle-icon" id="theme-icon">🌙</span>
-          <span class="theme-toggle-label" id="theme-label">Dark</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- DASHBOARD BODY -->
-    <div class="dashboard-body">
-
-      <!-- Active Filters Bar -->
-      <div class="active-filters-bar hidden" id="active-filters-bar">
-        <span class="af-label">Active Filters:</span>
-        <span id="active-filters-content"></span>
-      </div>
-
-      <!-- KPIs -->
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-icon">💰</div>
-          <div class="kpi-label">Total Revenue</div>
-          <div class="kpi-value" id="kpi-revenue">—</div>
-          <div class="kpi-sub" id="kpi-revenue-sub"></div>
-        </div>
-        <div class="kpi-card alt">
-          <div class="kpi-icon">📦</div>
-          <div class="kpi-label">Total Transactions</div>
-          <div class="kpi-value" id="kpi-txn">—</div>
-          <div class="kpi-sub" id="kpi-txn-sub"></div>
-        </div>
-        <div class="kpi-card teal">
-          <div class="kpi-icon">📤</div>
-          <div class="kpi-label">Stock OUT Value</div>
-          <div class="kpi-value" id="kpi-out">—</div>
-          <div class="kpi-sub" id="kpi-out-sub"></div>
-        </div>
-        <div class="kpi-card gold">
-          <div class="kpi-icon">📥</div>
-          <div class="kpi-label">Stock IN Value</div>
-          <div class="kpi-value" id="kpi-in">—</div>
-          <div class="kpi-sub" id="kpi-in-sub"></div>
-        </div>
-        <div class="kpi-card alt">
-          <div class="kpi-icon">👤</div>
-          <div class="kpi-label">Active Agents</div>
-          <div class="kpi-value" id="kpi-agents">—</div>
-          <div class="kpi-sub" id="kpi-agents-sub"></div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon">🏢</div>
-          <div class="kpi-label">Clients / Suppliers</div>
-          <div class="kpi-value" id="kpi-clients">—</div>
-          <div class="kpi-sub" id="kpi-clients-sub"></div>
-        </div>
-        <div class="kpi-card teal">
-          <div class="kpi-icon">🌍</div>
-          <div class="kpi-label">Countries Covered</div>
-          <div class="kpi-value" id="kpi-countries">—</div>
-          <div class="kpi-sub" id="kpi-countries-sub"></div>
-        </div>
-        <div class="kpi-card gold">
-          <div class="kpi-icon">📊</div>
-          <div class="kpi-label">Avg. Deal Size</div>
-          <div class="kpi-value" id="kpi-avg">—</div>
-          <div class="kpi-sub" id="kpi-avg-sub"></div>
-        </div>
-      </div>
-
-      <!-- ROW 1: Revenue Over Time | Stock IN vs OUT | Category Mix -->
-      <div class="charts-section-title">📈 Volume &amp; Revenue Trends</div>
-      <div class="charts-row cols-3" style="margin-bottom:14px;">
-        <div class="chart-card" style="grid-column: span 2;">
-          <div class="chart-header">
-            <div>
-              <div class="chart-title">Monthly Revenue &amp; Transaction Volume</div>
-              <div class="chart-subtitle">Total value (₱) and deal count over time</div>
-            </div>
-            <div class="chart-badge" id="badge-monthly">All Time</div>
-          </div>
-          <div class="chart-canvas-wrap" style="height:210px;">
-            <canvas id="chart-monthly"></canvas>
-          </div>
-        </div>
-        <div class="chart-card">
-          <div class="chart-header">
-            <div>
-              <div class="chart-title">Stock IN vs OUT</div>
-              <div class="chart-subtitle">Transaction type split by value</div>
-            </div>
-          </div>
-          <div class="chart-canvas-wrap" style="height:210px;">
-            <canvas id="chart-inout-donut"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- ROW 2: Stock IN/OUT Over Time | Category Bar -->
-      <div class="charts-section-title">📦 Category &amp; Inventory Flow</div>
-      <div class="charts-row cols-3" style="margin-bottom:14px;">
-        <div class="chart-card" style="grid-column: span 2;">
-          <div class="chart-header">
-            <div>
-              <div class="chart-title">Stock IN vs OUT Over Time</div>
-              <div class="chart-subtitle">Monthly flow comparison (₱)</div>
-            </div>
-          </div>
-          <div class="chart-canvas-wrap" style="height:200px;">
-            <canvas id="chart-stock-time"></canvas>
-          </div>
-        </div>
-        <div class="chart-card">
-          <div class="chart-header">
-            <div>
-              <div class="chart-title">Revenue by Category</div>
-              <div class="chart-subtitle">Top categories by total value</div>
-            </div>
-          </div>
-          <div class="chart-canvas-wrap" style="height:200px;">
-            <canvas id="chart-category"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- ROW 3: Agent Performance | Country | Client/Supplier -->
-      <div class="charts-section-title">👤 Agent, Geography &amp; Partner Analysis</div>
-      <div class="charts-row cols-3" style="margin-bottom:14px;">
-        <div class="chart-card">
-          <div class="chart-header">
-            <div>
-              <div class="chart-title">Agent Performance</div>
-              <div class="chart-subtitle">Revenue handled per agent</div>
-            </div>
-          </div>
-          <div class="chart-canvas-wrap" style="height:210px;">
-            <canvas id="chart-agent"></canvas>
-          </div>
-        </div>
-        <div class="chart-card">
-          <div class="chart-header">
-            <div>
-              <div class="chart-title">Revenue by Country</div>
-              <div class="chart-subtitle">Geographic distribution</div>
-            </div>
-          </div>
-          <div class="chart-canvas-wrap" style="height:210px;">
-            <canvas id="chart-country"></canvas>
-          </div>
-        </div>
-        <div class="chart-card">
-          <div class="chart-header">
-            <div>
-              <div class="chart-title">Top Clients / Suppliers</div>
-              <div class="chart-subtitle">By total transaction value</div>
-            </div>
-          </div>
-          <div style="height:210px; overflow-y:auto;" class="table-chart">
-            <table>
-              <thead><tr><th>#</th><th>Client / Supplier</th><th>Value (₱)</th><th>Share</th></tr></thead>
-              <tbody id="table-clients"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- ROW 4: Unit Price Distribution | Agent Transaction Count | Category IN/OUT -->
-      <div class="charts-section-title">🔬 Deep Dive: Pricing, Mix &amp; Agent Activity</div>
-      <div class="charts-row cols-3">
-        <div class="chart-card">
-          <div class="chart-header">
-            <div>
-              <div class="chart-title">Unit Price Distribution</div>
-              <div class="chart-subtitle">Frequency of price buckets</div>
-            </div>
-          </div>
-          <div class="chart-canvas-wrap" style="height:200px;">
-            <canvas id="chart-price-dist"></canvas>
-          </div>
-        </div>
-        <div class="chart-card">
-          <div class="chart-header">
-            <div>
-              <div class="chart-title">Agent Transaction Count</div>
-              <div class="chart-subtitle">Number of deals per agent</div>
-            </div>
-          </div>
-          <div class="chart-canvas-wrap" style="height:200px;">
-            <canvas id="chart-agent-count"></canvas>
-          </div>
-        </div>
-        <div class="chart-card">
-          <div class="chart-header">
-            <div>
-              <div class="chart-title">Category IN vs OUT Split</div>
-              <div class="chart-subtitle">Stock direction per category</div>
-            </div>
-          </div>
-          <div class="chart-canvas-wrap" style="height:200px;">
-            <canvas id="chart-cat-inout"></canvas>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /dashboard-body -->
-
-    <div class="footer">
-      GreenFarm INTL Import &amp; Export Corporation &nbsp;|&nbsp; Operations Dashboard &nbsp;|&nbsp; Developed by <strong>Jawad Afzaal</strong>
-    </div>
-  </div><!-- /main-content -->
-
-</div><!-- /app-layout -->
-
+</div>
 <script>
-/* ============================================================
-   GREENFARM INTL DASHBOARD
-   Author: Jawad Afzaal · Regional Operations Analyst
-   ============================================================ */
-
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQzKLhL8ZLfA0dtXf1u06i1rJP1ouQT9K6TqViYBdas4DSLYIJwceVA_V53Fz9IUg/pub?gid=1199413464&single=true&output=csv';
-
-let RAW_DATA = [];
-let FILTERED_DATA = [];
-let CHARTS = {};
-
-// Filter state
-let selectedFilters = {
-  country: new Set(),
-  category: new Set(),
-  agent: new Set(),
-  type: new Set()
-};
-
-// ============================================================
-// THEME
-// ============================================================
-let isDark = false;
-function toggleTheme() {
-  isDark = !isDark;
-  document.body.classList.toggle('dark', isDark);
-  document.getElementById('theme-icon').textContent = isDark ? '☀️' : '🌙';
-  document.getElementById('theme-label').textContent = isDark ? 'Light' : 'Dark';
-  updateAllCharts();
+const RAW='
+[{"#":"1","Date":"02/04/2025","Country":"Malaysia","Transaction ID":"TXN-001","Product Name":"WS1","Category":"Cashew","Unit Type":"Box","Transaction Type":"IN","Qty IN":"500","Qty OUT":"","Running Stock":"500","Reservation":"","Client / Supplier":"Main Supplier","Agent":"Florence","Reference / Order #":"PO-2025-001","Unit Price (\u20b1)":"\u20b18,620","Total Value (\u20b1)":"\u20b14,310,000","Warehouse":"Main Warehouse","Condition":"Good","Remarks":"First shipment","Logged By":"Jawad"},{"#":"2","Date":"03/04/2025","Country":"Malaysia","Transaction ID":"TXN-002","Product Name":"WS2","Category":"Cashew","Unit Type":"Box","Transaction Type":"IN","Qty IN":"300","Qty OUT":"","Running Stock":"800","Reservation":"","Client / Supplier":"Main Supplier","Agent":"Florence","Reference / Order #":"PO-2025-002","Unit Price (\u20b1)":"\u20b17,900","Total Value (\u20b1)":"\u20b12,370,000","Warehouse":"Main Warehouse","Condition":"Good","Remarks":"","Logged By":"Jawad"},{"#":"3","Date":"03/04/2025","Country":"Malaysia","Transaction ID":"TXN-003","Product Name":"WS1","Category":"Cashew","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"3","Running Stock":"797","Reservation":"","Client / Supplier":"JOSEFINA","Agent":"Florence","Reference / Order #":"ORD-001","Unit Price (\u20b1)":"\u20b18,620","Total Value (\u20b1)":"\u20b125,860","Warehouse":"Main Warehouse","Condition":"Good","Remarks":"Confirmed W/VN","Logged By":"Jawad"},{"#":"4","Date":"08/04/2025","Country":"Malaysia","Transaction ID":"TXN-004","Product Name":"WS2","Category":"Cashew","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"22","Running Stock":"775","Reservation":"","Client / Supplier":"JOSEFINA","Agent":"Florence","Reference / Order #":"ORD-002","Unit Price (\u20b1)":"\u20b17,900","Total Value (\u20b1)":"\u20b1173,800","Warehouse":"Main Warehouse","Condition":"Good","Remarks":"","Logged By":"Jawad"},{"#":"5","Date":"08/04/2025","Country":"Malaysia","Transaction ID":"TXN-005","Product Name":"VEGGIES","Category":"Veggies","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"2","Running Stock":"773","Reservation":"","Client / Supplier":"FELLY","Agent":"Florence","Reference / Order #":"ORD-003","Unit Price (\u20b1)":"\u20b14,050","Total Value (\u20b1)":"\u20b18,100","Warehouse":"Cold Storage","Condition":"Good","Remarks":"Free delivery","Logged By":"Jawad"},{"#":"6","Date":"13/04/2025","Country":"Malaysia","Transaction ID":"TXN-006","Product Name":"WS1","Category":"Cashew","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"2","Running Stock":"771","Reservation":"","Client / Supplier":"CHARLES","Agent":"Florence","Reference / Order #":"ORD-004","Unit Price (\u20b1)":"\u20b18,620","Total Value (\u20b1)":"\u20b117,240","Warehouse":"Main Warehouse","Condition":"Good","Remarks":"Confirmed W/VN","Logged By":"Jawad"},{"#":"7","Date":"01/05/2025","Country":"Malaysia","Transaction ID":"TXN-007","Product Name":"WW320","Category":"Cashew","Unit Type":"Box","Transaction Type":"IN","Qty IN":"200","Qty OUT":"","Running Stock":"971","Reservation":"","Client / Supplier":"Main Supplier","Agent":"Florence","Reference / Order #":"PO-2025-003","Unit Price (\u20b1)":"\u20b19,200","Total Value (\u20b1)":"\u20b11,840,000","Warehouse":"Main Warehouse","Condition":"Good","Remarks":"","Logged By":"Jawad"},{"#":"8","Date":"05/05/2025","Country":"Malaysia","Transaction ID":"TXN-008","Product Name":"MANGO-1KG","Category":"Mango","Unit Type":"Box","Transaction Type":"IN","Qty IN":"400","Qty OUT":"","Running Stock":"1,371","Reservation":"","Client / Supplier":"Main Supplier","Agent":"Florence","Reference / Order #":"PO-2025-004","Unit Price (\u20b1)":"\u20b13,500","Total Value (\u20b1)":"\u20b11,400,000","Warehouse":"Cold Storage","Condition":"Good","Remarks":"Original 1kg","Logged By":"Jawad"},{"#":"9","Date":"10/05/2025","Country":"Malaysia","Transaction ID":"TXN-009","Product Name":"COFFEE-12","Category":"Coffee","Unit Type":"Pack","Transaction Type":"IN","Qty IN":"20","Qty OUT":"","Running Stock":"1,391","Reservation":"","Client / Supplier":"Main Supplier","Agent":"Florence","Reference / Order #":"PO-2025-005","Unit Price (\u20b1)":"\u20b12,800","Total Value (\u20b1)":"\u20b156,000","Warehouse":"Main Warehouse","Condition":"Good","Remarks":"12 caps per pack","Logged By":"Jawad"},{"#":"10","Date":"15/05/2025","Country":"Malaysia","Transaction ID":"TXN-010","Product Name":"SP","Category":"Cashew","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"1","Running Stock":"1,390","Reservation":"","Client / Supplier":"TERESSA","Agent":"Florence","Reference / Order #":"ORD-005","Unit Price (\u20b1)":"\u20b110,500","Total Value (\u20b1)":"\u20b110,500","Warehouse":"Main Warehouse","Condition":"Good","Remarks":"","Logged By":"Jawad"},{"#":"12","Date":"08/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"WS1","Category":"Cashew","Unit Type":"Box","Transaction Type":"IN","Qty IN":"700","Qty OUT":"","Running Stock":"2,090","Reservation":"","Client / Supplier":"Main Supplier","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"","Total Value (\u20b1)":"\u20b10","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"13","Date":"16/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"WS1","Category":"Cashew","Unit Type":"Box","Transaction Type":"IN","Qty IN":"700","Qty OUT":"","Running Stock":"2,790","Reservation":"","Client / Supplier":"Main Supplier","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"","Total Value (\u20b1)":"\u20b10","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"14","Date":"27/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"WS1","Category":"Cashew","Unit Type":"Box","Transaction Type":"IN","Qty IN":"750","Qty OUT":"","Running Stock":"3,540","Reservation":"","Client / Supplier":"Main Supplier","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"","Total Value (\u20b1)":"\u20b10","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"15","Date":"08/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"WS2","Category":"Cashew","Unit Type":"Box","Transaction Type":"IN","Qty IN":"500","Qty OUT":"","Running Stock":"4,040","Reservation":"","Client / Supplier":"Main Supplier","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"","Total Value (\u20b1)":"\u20b10","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"16","Date":"16/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"WS2","Category":"Cashew","Unit Type":"Box","Transaction Type":"IN","Qty IN":"500","Qty OUT":"","Running Stock":"4,540","Reservation":"","Client / Supplier":"Main Supplier","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"","Total Value (\u20b1)":"\u20b10","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"17","Date":"27/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"WS2","Category":"Cashew","Unit Type":"Box","Transaction Type":"IN","Qty IN":"500","Qty OUT":"","Running Stock":"5,040","Reservation":"","Client / Supplier":"Main Supplier","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"","Total Value (\u20b1)":"\u20b10","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"18","Date":"08/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"WW320","Category":"Cashew","Unit Type":"Box","Transaction Type":"IN","Qty IN":"100","Qty OUT":"","Running Stock":"5,140","Reservation":"","Client / Supplier":"Main Supplier","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"","Total Value (\u20b1)":"\u20b10","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"19","Date":"16/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"WW320","Category":"Cashew","Unit Type":"Box","Transaction Type":"IN","Qty IN":"50","Qty OUT":"","Running Stock":"5,190","Reservation":"","Client / Supplier":"Main Supplier","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"","Total Value (\u20b1)":"\u20b10","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"20","Date":"27/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"WW320","Category":"Cashew","Unit Type":"Box","Transaction Type":"IN","Qty IN":"50","Qty OUT":"","Running Stock":"5,240","Reservation":"","Client / Supplier":"Main Supplier","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"","Total Value (\u20b1)":"\u20b10","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"21","Date":"08/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"SP","Category":"Cashew","Unit Type":"Box","Transaction Type":"IN","Qty IN":"50","Qty OUT":"","Running Stock":"5,290","Reservation":"","Client / Supplier":"","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"","Total Value (\u20b1)":"\u20b10","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"22","Date":"27/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"SP","Category":"Cashew","Unit Type":"Box","Transaction Type":"IN","Qty IN":"50","Qty OUT":"","Running Stock":"5,340","Reservation":"","Client / Supplier":"","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"","Total Value (\u20b1)":"\u20b10","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"23","Date":"16/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig1kg","Category":"Mango","Unit Type":"Box","Transaction Type":"IN","Qty IN":"256","Qty OUT":"","Running Stock":"5,596","Reservation":"","Client / Supplier":"imex","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"","Total Value (\u20b1)":"\u20b10","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"24","Date":"16/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig500g","Category":"Mango","Unit Type":"Box","Transaction Type":"IN","Qty IN":"296","Qty OUT":"","Running Stock":"5,892","Reservation":"","Client / Supplier":"imex","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"","Total Value (\u20b1)":"\u20b10","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"25","Date":"16/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESchilli5kg","Category":"Mango","Unit Type":"Box","Transaction Type":"IN","Qty IN":"10","Qty OUT":"","Running Stock":"5,902","Reservation":"","Client / Supplier":"imex","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"","Total Value (\u20b1)":"\u20b10","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"26","Date":"16/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESchilli500g","Category":"Mango","Unit Type":"Box","Transaction Type":"IN","Qty IN":"3","Qty OUT":"","Running Stock":"5,905","Reservation":"","Client / Supplier":"imex","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"","Total Value (\u20b1)":"\u20b10","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"27","Date":"16/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"JACKFRUIT","Category":"Jackfruit","Unit Type":"Box","Transaction Type":"IN","Qty IN":"35","Qty OUT":"","Running Stock":"5,940","Reservation":"","Client / Supplier":"","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"","Total Value (\u20b1)":"\u20b10","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"28","Date":"16/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"COFFEE12caps","Category":"Coffee","Unit Type":"Box","Transaction Type":"IN","Qty IN":"20","Qty OUT":"","Running Stock":"5,960","Reservation":"","Client / Supplier":"","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"","Total Value (\u20b1)":"\u20b10","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"29","Date":"16/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"COFFEE6caps","Category":"Coffee","Unit Type":"Box","Transaction Type":"IN","Qty IN":"30","Qty OUT":"","Running Stock":"5,990","Reservation":"","Client / Supplier":"","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"","Total Value (\u20b1)":"\u20b10","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"30","Date":"23/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig5kg","Category":"Mango","Unit Type":"Box","Transaction Type":"IN","Qty IN":"300","Qty OUT":"","Running Stock":"6,290","Reservation":"","Client / Supplier":"imex","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"","Total Value (\u20b1)":"\u20b10","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"31","Date":"26/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig1kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"1","Running Stock":"6,289","Reservation":"","Client / Supplier":"AI BATANGAS","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,100","Total Value (\u20b1)":"\u20b18,100","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"32","Date":"01/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig500g","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"1","Running Stock":"6,288","Reservation":"","Client / Supplier":"ALDRIAN","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,200","Total Value (\u20b1)":"\u20b18,200","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"33","Date":"17/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"JACKFRUIT","Category":"","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"25","Running Stock":"6,263","Reservation":"","Client / Supplier":"ANTONIO BERNAL","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b13,325","Total Value (\u20b1)":"\u20b183,125","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"34","Date":"30/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"WS2","Category":"Cashew","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"50","Running Stock":"6,213","Reservation":"","Client / Supplier":"ANTONIO BERNAL","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,732","Total Value (\u20b1)":"\u20b1436,590","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"35","Date":"17/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig5kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"1","Running Stock":"6,212","Reservation":"","Client / Supplier":"CAROL NABONG","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,100","Total Value (\u20b1)":"\u20b18,100","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"36","Date":"20/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig1kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"6","Running Stock":"6,206","Reservation":"","Client / Supplier":"CONCEPCION MAGBOJOS","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,340","Total Value (\u20b1)":"\u20b150,040","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"37","Date":"20/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESchilli5kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"9","Running Stock":"6,197","Reservation":"","Client / Supplier":"CONCEPCION MAGBOJOS","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,340","Total Value (\u20b1)":"\u20b175,060","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"38","Date":"13/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig1kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"2","Running Stock":"6,195","Reservation":"","Client / Supplier":"CONCEPCION MAGBOJOS","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,000","Total Value (\u20b1)":"\u20b116,000","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"39","Date":"13/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig5kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"10","Running Stock":"6,185","Reservation":"","Client / Supplier":"CONCEPCION MAGBOJOS","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,000","Total Value (\u20b1)":"\u20b180,000","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"40","Date":"19/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig5kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"25","Running Stock":"6,160","Reservation":"","Client / Supplier":"CONCEPCION MAGBOJOS","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b17,560","Total Value (\u20b1)":"\u20b1189,000","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"41","Date":"30/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig5kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"15","Running Stock":"6,145","Reservation":"","Client / Supplier":"CONCEPCION MAGBOJOS","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b17,560","Total Value (\u20b1)":"\u20b1113,400","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"42","Date":"17/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig1kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"1","Running Stock":"6,144","Reservation":"","Client / Supplier":"CONEY MENDOZA","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,100","Total Value (\u20b1)":"\u20b18,100","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"43","Date":"07/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig1kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"1","Running Stock":"6,143","Reservation":"","Client / Supplier":"CHINOS DELI","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,100","Total Value (\u20b1)":"\u20b18,100","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"44","Date":"21/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"WS2","Category":"Cashew","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"115","Running Stock":"6,028","Reservation":"","Client / Supplier":"DANNY","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,205","Total Value (\u20b1)":"\u20b1943,527","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"45","Date":"28/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig1kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"19","Running Stock":"6,009","Reservation":"","Client / Supplier":"DANNY","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b17,900","Total Value (\u20b1)":"\u20b1150,100","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"46","Date":"28/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig5kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"30","Running Stock":"5,979","Reservation":"","Client / Supplier":"DANNY","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b17,900","Total Value (\u20b1)":"\u20b1237,000","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"47","Date":"28/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig500g","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"1","Running Stock":"5,978","Reservation":"","Client / Supplier":"DANNY","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b17,900","Total Value (\u20b1)":"\u20b17,900","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"48","Date":"28/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESchilli500g","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"1","Running Stock":"5,977","Reservation":"","Client / Supplier":"DANNY","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b17,900","Total Value (\u20b1)":"\u20b17,900","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"49","Date":"20/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig1kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"1","Running Stock":"5,976","Reservation":"","Client / Supplier":"ED VISTA","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,100","Total Value (\u20b1)":"\u20b18,100","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"50","Date":"20/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig500g","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"1","Running Stock":"5,975","Reservation":"","Client / Supplier":"EFRAIM","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,550","Total Value (\u20b1)":"\u20b18,550","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"20/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESchilli500g","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"1","Running Stock":"5,974","Reservation":"","Client / Supplier":"EFRAIM","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,550","Total Value (\u20b1)":"\u20b18,550","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"09/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig1kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"1","Running Stock":"5,973","Reservation":"","Client / Supplier":"GERALD","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,100","Total Value (\u20b1)":"\u20b18,100","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"28/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig5kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"10","Running Stock":"5,963","Reservation":"","Client / Supplier":"GOLDEN YEMA","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,000","Total Value (\u20b1)":"\u20b180,000","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"21/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig1kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"25","Running Stock":"5,938","Reservation":"","Client / Supplier":"KIM ENRIQUEZ","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b17,960","Total Value (\u20b1)":"\u20b1199,000","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"11/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig1kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"25","Running Stock":"5,913","Reservation":"","Client / Supplier":"KIM ENRIQUEZ","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b17,960","Total Value (\u20b1)":"\u20b1199,000","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"19/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig1kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"25","Running Stock":"5,888","Reservation":"","Client / Supplier":"KIM ENRIQUEZ","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b17,960","Total Value (\u20b1)":"\u20b1199,000","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"26/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig1kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"25","Running Stock":"5,863","Reservation":"","Client / Supplier":"KIM ENRIQUEZ","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b17,900","Total Value (\u20b1)":"\u20b1197,500","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"06/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig1kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"1","Running Stock":"5,862","Reservation":"","Client / Supplier":"MARIJUNE SUE SIY","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,100","Total Value (\u20b1)":"\u20b18,100","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"31/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"WS1","Category":"Cashew","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"1","Running Stock":"5,861","Reservation":"","Client / Supplier":"MARIJUNE SUE SIY","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b110,501","Total Value (\u20b1)":"\u20b110,501","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"31/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"WS2","Category":"Cashew","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"2","Running Stock":"5,859","Reservation":"","Client / Supplier":"MARIJUNE SUE SIY","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b19,185","Total Value (\u20b1)":"\u20b118,370","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"31/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"SP","Category":"","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"10","Running Stock":"5,849","Reservation":"","Client / Supplier":"MARIJUNE SUE SIY","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b15,330","Total Value (\u20b1)":"\u20b153,298","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"31/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"COFFEE-6","Category":"Coffee","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"1","Running Stock":"5,848","Reservation":"","Client / Supplier":"MARIJUNE SUE SIY","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b14,200","Total Value (\u20b1)":"\u20b14,200","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"28/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig1kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"1","Running Stock":"5,847","Reservation":"","Client / Supplier":"PAT BARRAMEDA","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,100","Total Value (\u20b1)":"\u20b18,100","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"28/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"WS2","Category":"Cashew","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"50","Running Stock":"5,797","Reservation":"","Client / Supplier":"PRINCESS","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,732","Total Value (\u20b1)":"\u20b1436,590","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"23/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig1kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"1","Running Stock":"5,796","Reservation":"","Client / Supplier":"RAFFY JAY ALLERA","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,100","Total Value (\u20b1)":"\u20b18,100","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"17/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig1kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"19","Running Stock":"5,777","Reservation":"","Client / Supplier":"ROGEN","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b17,900","Total Value (\u20b1)":"\u20b1150,100","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"17/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig500g","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"1","Running Stock":"5,776","Reservation":"","Client / Supplier":"ROGEN","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b17,900","Total Value (\u20b1)":"\u20b17,900","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"17/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"COFFEE-12","Category":"Coffee","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"1","Running Stock":"5,775","Reservation":"","Client / Supplier":"ROGEN","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b16,500","Total Value (\u20b1)":"\u20b16,500","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"17/02/2026","Country":"Philippines","Transaction ID":"","Product Name":"COFFEE-6","Category":"Coffee","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"1","Running Stock":"5,774","Reservation":"","Client / Supplier":"ROGEN","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b14,200","Total Value (\u20b1)":"\u20b14,200","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"30/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"WW320","Category":"Cashew","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"5","Running Stock":"5,769","Reservation":"","Client / Supplier":"RONA","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b111,227","Total Value (\u20b1)":"\u20b156,133","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"30/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"WS1","Category":"Cashew","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"15","Running Stock":"5,754","Reservation":"","Client / Supplier":"RONA","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b110,161","Total Value (\u20b1)":"\u20b1152,410","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"30/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"WS2","Category":"Cashew","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"7","Running Stock":"5,747","Reservation":"","Client / Supplier":"RONA","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,845","Total Value (\u20b1)":"\u20b161,916","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"30/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig5kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"2","Running Stock":"5,745","Reservation":"","Client / Supplier":"RONA","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,100","Total Value (\u20b1)":"\u20b116,200","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"30/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"COFFEE-6","Category":"Coffee","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"1","Running Stock":"5,744","Reservation":"","Client / Supplier":"RONA","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b14,200","Total Value (\u20b1)":"\u20b14,200","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"26/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"W320","Category":"Cashew","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"76","Running Stock":"5,668","Reservation":"","Client / Supplier":"RYAN","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b110,886","Total Value (\u20b1)":"\u20b1827,366","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"26/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"WS1","Category":"Cashew","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"24","Running Stock":"5,644","Reservation":"","Client / Supplier":"RYAN","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,959","Total Value (\u20b1)":"\u20b1215,006","Warehouse":"","Condition":"","Remarks":"","Logged By":""},{"#":"","Date":"03/03/2026","Country":"Philippines","Transaction ID":"","Product Name":"MANGOESorig5kg","Category":"Mango","Unit Type":"Box","Transaction Type":"OUT","Qty IN":"","Qty OUT":"1","Running Stock":"5,643","Reservation":"","Client / Supplier":"TERESA TINGSON","Agent":"","Reference / Order #":"","Unit Price (\u20b1)":"\u20b18,100","Total Value (\u20b1)":"\u20b18,100","Warehouse":"","Condition":"","Remarks":"","Logged By":""}]';
+const DATA_ALL = JSON.parse(RAW);
+let FD = [...DATA_ALL];
+let CH = {};
+let DARK = false;
+const SEL = {country:new Set(),category:new Set(),type:new Set(),client:new Set()};
+const GR = ['#0d5c2e','#1a7a3f','#2ecc71','#27ae60','#58d68d','#0a4a22','#145c30','#3cb371','#52be80','#82e0aa','#196f3d','#239b56'];
+const gc=()=>DARK?'rgba(168,212,184,.07)':'rgba(13,92,46,.08)';
+const gtc=()=>DARK?'#a8d4b8':'#3d6b50';
+function fmt(n){if(!n||isNaN(n))return'—';if(n>=1e6)return'₱'+(n/1e6).toFixed(2)+'M';if(n>=1e3)return'₱'+(n/1e3).toFixed(1)+'K';return'₱'+Math.round(n).toLocaleString()}
+function pn(v){return parseFloat(String(v).replace(/[₱,\s]/g,''))||0}
+function pd(v){if(!v)return null;const m=String(v).trim().match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);if(m)return new Date(`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`);return null}
+function mk(d){if(!d)return'?';return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
+function ml(k){const ms=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const[y,m]=k.split('-');return`${ms[+m-1]} ${y}`}
+function col(n){return GR.slice(0,n)}
+// Dropdowns
+function tog(id){
+  const d=document.getElementById('dd-'+id),t=document.getElementById('tr-'+id);
+  const o=d.classList.contains('open');
+  document.querySelectorAll('.cd').forEach(e=>e.classList.remove('open'));
+  document.querySelectorAll('.cst').forEach(e=>e.classList.remove('open'));
+  if(!o){d.classList.add('open');t.classList.add('open');}
 }
-
-// ============================================================
-// UTILS
-// ============================================================
-function fmt(n) {
-  if (n === null || n === undefined || isNaN(n)) return '—';
-  if (n >= 1e9) return '₱' + (n/1e9).toFixed(2) + 'B';
-  if (n >= 1e6) return '₱' + (n/1e6).toFixed(2) + 'M';
-  if (n >= 1e3) return '₱' + (n/1e3).toFixed(1) + 'K';
-  return '₱' + n.toFixed(0);
-}
-function fmtNum(n) {
-  if (!n) return '0';
-  return n.toLocaleString();
-}
-function getVal(row, keys) {
-  for (const k of keys) {
-    const found = Object.keys(row).find(rk => rk.trim().toLowerCase() === k.toLowerCase());
-    if (found !== undefined && row[found] !== '' && row[found] !== null && row[found] !== undefined) return row[found];
-  }
-  return '';
-}
-function parseNum(v) { const n = parseFloat(String(v).replace(/[,₱\s]/g,'')); return isNaN(n)?0:n; }
-function parseDate(v) {
-  if (!v) return null;
-  const s = String(v).trim();
-  // Try various formats
-  let d = new Date(s);
-  if (!isNaN(d)) return d;
-  // dd/mm/yyyy
-  const m = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
-  if (m) { d = new Date(`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`); if(!isNaN(d)) return d; }
-  return null;
-}
-function monthKey(d) {
-  if (!d) return 'Unknown';
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-}
-function monthLabel(k) {
-  if (!k || k==='Unknown') return k;
-  const [y,m] = k.split('-');
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `${months[parseInt(m)-1]} ${y}`;
-}
-
-const GF_GREENS = [
-  '#0d5c2e','#1a7a3f','#2ecc71','#27ae60','#58d68d',
-  '#0a4a22','#145c30','#3cb371','#52be80','#82e0aa',
-  '#196f3d','#239b56','#a9dfbf','#1e8449','#76d7a0'
-];
-function getColors(n) { return Array.from({length:n},(_,i)=>GF_GREENS[i%GF_GREENS.length]); }
-function chartGridColor() { return isDark ? 'rgba(168,212,184,0.07)' : 'rgba(13,92,46,0.08)'; }
-function chartTextColor() { return isDark ? '#a8d4b8' : '#3d6b50'; }
-
-// ============================================================
-// DROPDOWN LOGIC
-// ============================================================
-function toggleDropdown(id) {
-  const d = document.getElementById(`dropdown-${id}`);
-  const t = document.getElementById(`trigger-${id}`);
-  const isOpen = d.classList.contains('open');
-  // Close all
-  document.querySelectorAll('.custom-dropdown').forEach(el=>el.classList.remove('open'));
-  document.querySelectorAll('.custom-select-trigger').forEach(el=>el.classList.remove('open'));
-  if (!isOpen) { d.classList.add('open'); t.classList.add('open'); }
-}
-document.addEventListener('click', e => {
-  if (!e.target.closest('.custom-select-wrapper')) {
-    document.querySelectorAll('.custom-dropdown').forEach(el=>el.classList.remove('open'));
-    document.querySelectorAll('.custom-select-trigger').forEach(el=>el.classList.remove('open'));
-  }
-});
-
-function filterDropdown(id, query) {
-  const container = document.getElementById(`options-${id}`);
-  container.querySelectorAll('.dropdown-item').forEach(item => {
-    const text = item.querySelector('label') ? item.querySelector('label').textContent : item.textContent;
-    item.style.display = text.toLowerCase().includes(query.toLowerCase()) ? '' : 'none';
+document.addEventListener('click',e=>{if(!e.target.closest('.csw')){document.querySelectorAll('.cd').forEach(e=>e.classList.remove('open'));document.querySelectorAll('.cst').forEach(e=>e.classList.remove('open'));}});
+function fdd(id,q){document.getElementById('op-'+id).querySelectorAll('.ditem').forEach(i=>{i.style.display=i.dataset.v.toLowerCase().includes(q.toLowerCase())?'':'none'})}
+function buildOpts(id,vals){
+  const c=document.getElementById('op-'+id);c.innerHTML='';
+  [...vals].filter(Boolean).sort().forEach(v=>{
+    const d=document.createElement('div');d.className='ditem';d.dataset.v=v;
+    const cb=document.createElement('input');cb.type='checkbox';cb.id=`cb-${id}-${v}`;cb.checked=SEL[id].has(v);
+    cb.onchange=()=>{SEL[id][cb.checked?'add':'delete'](v);updChips(id);updLabel(id)};
+    const lb=document.createElement('label');lb.htmlFor=`cb-${id}-${v}`;lb.textContent=v;
+    d.append(cb,lb);c.appendChild(d);
   });
 }
-
-function buildDropdownOptions(id, values) {
-  const container = document.getElementById(`options-${id}`);
-  if (!container) return;
-  container.innerHTML = '';
-  [...values].sort().forEach(v => {
-    if (!v) return;
-    const item = document.createElement('div');
-    item.className = 'dropdown-item';
-    item.dataset.value = v;
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.id = `cb-${id}-${v}`;
-    cb.checked = selectedFilters[id].has(v);
-    cb.onchange = () => toggleOption(id, v, cb.checked);
-    const label = document.createElement('label');
-    label.htmlFor = `cb-${id}-${v}`;
-    label.textContent = v;
-    label.style.cursor = 'pointer';
-    label.style.flex = '1';
-    label.style.fontSize = '0.73rem';
-    item.appendChild(cb);
-    item.appendChild(label);
-    container.appendChild(item);
+function updLabel(id){const ct=SEL[id].size;const lbs={country:'All Countries',category:'All Categories',type:'All Types',client:'All Clients'};document.getElementById('lb-'+id).textContent=ct?`${ct} selected`:lbs[id]}
+function updChips(id){
+  const c=document.getElementById('ch-'+id);c.innerHTML='';
+  SEL[id].forEach(v=>{const d=document.createElement('div');d.className='chip';d.innerHTML=`${v}<span class="chipr" onclick="rmChip('${id}','${v.replace(/'/g,"\\'")}')">✕</span>`;c.appendChild(d)});
+}
+function rmChip(id,v){SEL[id].delete(v);const cb=document.getElementById(`cb-${id}-${v}`);if(cb)cb.checked=false;updChips(id);updLabel(id)}
+function initFilters(){
+  const co=new Set(),ca=new Set(),ty=new Set(),cl=new Set();
+  DATA_ALL.forEach(r=>{
+    if(r['Country'])co.add(r['Country']);
+    if(r['Category'])ca.add(r['Category']);
+    if(r['Transaction Type'])ty.add(r['Transaction Type']);
+    if(r['Client / Supplier'])cl.add(r['Client / Supplier']);
   });
+  buildOpts('country',co);buildOpts('category',ca);buildOpts('type',ty);buildOpts('client',cl);
+  const dates=DATA_ALL.map(r=>pd(r['Date'])).filter(Boolean).sort((a,b)=>a-b);
+  if(dates.length){document.getElementById('df').value=dates[0].toISOString().slice(0,10);document.getElementById('dt').value=dates[dates.length-1].toISOString().slice(0,10);}
+  document.getElementById('lu').textContent=`Data: ${DATA_ALL.length} records`;
 }
-
-function toggleOption(id, value, checked) {
-  if (checked) selectedFilters[id].add(value);
-  else selectedFilters[id].delete(value);
-  updateChipDisplay(id);
-  updateTriggerLabel(id);
-}
-
-function updateTriggerLabel(id) {
-  const el = document.getElementById(`label-${id}`);
-  const count = selectedFilters[id].size;
-  const labels = {country:'All Countries', category:'All Categories', agent:'All Agents', type:'All Types'};
-  el.textContent = count === 0 ? labels[id] : `${count} selected`;
-}
-
-function updateChipDisplay(id) {
-  const container = document.getElementById(`chips-${id}`);
-  if (!container) return;
-  container.innerHTML = '';
-  selectedFilters[id].forEach(v => {
-    const chip = document.createElement('div');
-    chip.className = 'chip';
-    chip.innerHTML = `${v}<span class="chip-remove" onclick="removeChip('${id}','${v.replace(/'/g,"\\'")}')">✕</span>`;
-    container.appendChild(chip);
-  });
-}
-
-function removeChip(id, value) {
-  selectedFilters[id].delete(value);
-  const cb = document.getElementById(`cb-${id}-${value}`);
-  if (cb) cb.checked = false;
-  updateChipDisplay(id);
-  updateTriggerLabel(id);
-}
-
-// ============================================================
-// POPULATE FILTER OPTIONS FROM DATA
-// ============================================================
-function populateFilters(data) {
-  const countries = new Set(), categories = new Set(), agents = new Set(), types = new Set();
-  data.forEach(row => {
-    const c = getVal(row,['country','Country','COUNTRY']);
-    const cat = getVal(row,['category','Category','CATEGORY','item category','Item Category']);
-    const ag = getVal(row,['agent','Agent','AGENT','agent name','Agent Name']);
-    const tp = getVal(row,['type','Type','transaction type','Transaction Type','stock type','Stock Type','in/out','IN/OUT']);
-    if(c) countries.add(c);
-    if(cat) categories.add(cat);
-    if(ag) agents.add(ag);
-    if(tp) types.add(tp);
-  });
-  buildDropdownOptions('country', countries);
-  buildDropdownOptions('category', categories);
-  buildDropdownOptions('agent', agents);
-  buildDropdownOptions('type', types);
-
-  // Set date range defaults
-  const dates = data.map(r=>parseDate(getVal(r,['date','Date','DATE','transaction date','Transaction Date']))).filter(Boolean);
-  if (dates.length) {
-    dates.sort((a,b)=>a-b);
-    document.getElementById('date-from').value = dates[0].toISOString().slice(0,10);
-    document.getElementById('date-to').value = dates[dates.length-1].toISOString().slice(0,10);
-  }
-  document.getElementById('last-updated-text').textContent = `Last loaded: ${new Date().toLocaleString()}`;
-}
-
-// ============================================================
-// APPLY FILTERS
-// ============================================================
-function applyFilters() {
-  const dateFrom = document.getElementById('date-from').value;
-  const dateTo = document.getElementById('date-to').value;
-  const valMin = parseFloat(document.getElementById('val-min').value);
-  const valMax = parseFloat(document.getElementById('val-max').value);
-  const priceMin = parseFloat(document.getElementById('price-min').value);
-  const priceMax = parseFloat(document.getElementById('price-max').value);
-
-  FILTERED_DATA = RAW_DATA.filter(row => {
-    const d = parseDate(getVal(row,['date','Date','DATE','transaction date','Transaction Date']));
-    if (dateFrom && d && d < new Date(dateFrom)) return false;
-    if (dateTo && d && d > new Date(dateTo+'T23:59:59')) return false;
-
-    const country = getVal(row,['country','Country','COUNTRY']);
-    if (selectedFilters.country.size && !selectedFilters.country.has(country)) return false;
-
-    const cat = getVal(row,['category','Category','CATEGORY','item category','Item Category']);
-    if (selectedFilters.category.size && !selectedFilters.category.has(cat)) return false;
-
-    const ag = getVal(row,['agent','Agent','AGENT','agent name','Agent Name']);
-    if (selectedFilters.agent.size && !selectedFilters.agent.has(ag)) return false;
-
-    const tp = getVal(row,['type','Type','transaction type','Transaction Type','stock type','Stock Type','in/out','IN/OUT']);
-    if (selectedFilters.type.size && !selectedFilters.type.has(tp)) return false;
-
-    const tv = parseNum(getVal(row,['total value','Total Value','total','Total','amount','Amount','value','Value']));
-    if (!isNaN(valMin) && tv < valMin) return false;
-    if (!isNaN(valMax) && tv > valMax) return false;
-
-    const up = parseNum(getVal(row,['unit price','Unit Price','price','Price','rate','Rate']));
-    if (!isNaN(priceMin) && up < priceMin) return false;
-    if (!isNaN(priceMax) && up > priceMax) return false;
-
+function applyF(){
+  const df=document.getElementById('df').value,dt=document.getElementById('dt').value;
+  const vmin=parseFloat(document.getElementById('vmin').value),vmax=parseFloat(document.getElementById('vmax').value);
+  const pmin=parseFloat(document.getElementById('pmin').value),pmax=parseFloat(document.getElementById('pmax').value);
+  FD=DATA_ALL.filter(r=>{
+    const d=pd(r['Date']);
+    if(df&&d&&d<new Date(df))return false;
+    if(dt&&d&&d>new Date(dt+'T23:59:59'))return false;
+    if(SEL.country.size&&!SEL.country.has(r['Country']))return false;
+    if(SEL.category.size&&!SEL.category.has(r['Category']))return false;
+    if(SEL.type.size&&!SEL.type.has(r['Transaction Type']))return false;
+    if(SEL.client.size&&!SEL.client.has(r['Client / Supplier']))return false;
+    const tv=pn(r['Total Value (₱)']);
+    if(!isNaN(vmin)&&tv<vmin)return false;
+    if(!isNaN(vmax)&&tv>vmax)return false;
+    const up=pn(r['Unit Price (₱)']);
+    if(!isNaN(pmin)&&up<pmin)return false;
+    if(!isNaN(pmax)&&up>pmax)return false;
     return true;
   });
-
-  updateActiveFiltersBar(dateFrom, dateTo, valMin, valMax, priceMin, priceMax);
-  updateFilterBadge();
-  renderAll();
+  updAFB(df,dt,vmin,vmax,pmin,pmax);updBadge();renderAll();
 }
-
-function updateActiveFiltersBar(dateFrom, dateTo, valMin, valMax, priceMin, priceMax) {
-  const chips = [];
-  if (dateFrom || dateTo) chips.push(`📅 ${dateFrom||'...'} → ${dateTo||'...'}`);
-  selectedFilters.country.forEach(v=>chips.push(`🌍 ${v}`));
-  selectedFilters.category.forEach(v=>chips.push(`📦 ${v}`));
-  selectedFilters.agent.forEach(v=>chips.push(`👤 ${v}`));
-  selectedFilters.type.forEach(v=>chips.push(`🔄 ${v}`));
-  if (!isNaN(valMin) || !isNaN(valMax)) chips.push(`💰 ₱${isNaN(valMin)?0:valMin.toLocaleString()} – ₱${isNaN(valMax):'∞':valMax.toLocaleString()}`);
-  if (!isNaN(priceMin) || !isNaN(priceMax)) chips.push(`🏷️ ₱${isNaN(priceMin)?0:priceMin} – ₱${isNaN(priceMax):'∞':priceMax}`);
-
-  const bar = document.getElementById('active-filters-bar');
-  const content = document.getElementById('active-filters-content');
-  if (chips.length) {
-    bar.classList.remove('hidden');
-    content.innerHTML = chips.map(c=>`<span class="af-chip">${c}</span>`).join(' ');
-  } else {
-    bar.classList.add('hidden');
-  }
+function updAFB(df,dt,vmin,vmax,pmin,pmax){
+  const chips=[];
+  if(df||dt)chips.push(`📅 ${df||'...'} → ${dt||'...'}`);
+  SEL.country.forEach(v=>chips.push(`🌍 ${v}`));
+  SEL.category.forEach(v=>chips.push(`📦 ${v}`));
+  SEL.type.forEach(v=>chips.push(`🔄 ${v}`));
+  SEL.client.forEach(v=>chips.push(`🏢 ${v}`));
+  if(!isNaN(vmin)||!isNaN(vmax))chips.push(`💰 ₱${isNaN(vmin)?0:vmin.toLocaleString()}–₱${isNaN(vmax):'∞':vmax.toLocaleString()}`);
+  const bar=document.getElementById('afb'),con=document.getElementById('afc');
+  if(chips.length){bar.classList.remove('hidden');con.innerHTML=chips.map(c=>`<span class="afc">${c}</span>`).join(' ');}
+  else bar.classList.add('hidden');
 }
-
-function updateFilterBadge() {
-  const total = selectedFilters.country.size + selectedFilters.category.size + selectedFilters.agent.size + selectedFilters.type.size;
-  const badge = document.getElementById('filter-count-badge');
-  if (total > 0) { badge.style.display=''; badge.textContent=total; }
-  else badge.style.display='none';
+function updBadge(){const t=SEL.country.size+SEL.category.size+SEL.type.size+SEL.client.size;const b=document.getElementById('fbadge');if(t){b.style.display='';b.textContent=t;}else b.style.display='none';}
+function resetF(){
+  ['country','category','type','client'].forEach(id=>{SEL[id].clear();updChips(id);updLabel(id);document.querySelectorAll(`#op-${id} input[type=checkbox]`).forEach(c=>c.checked=false)});
+  ['vmin','vmax','pmin','pmax'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
+  const dates=DATA_ALL.map(r=>pd(r['Date'])).filter(Boolean).sort((a,b)=>a-b);
+  if(dates.length){document.getElementById('df').value=dates[0].toISOString().slice(0,10);document.getElementById('dt').value=dates[dates.length-1].toISOString().slice(0,10);}
+  document.getElementById('afb').classList.add('hidden');
+  document.getElementById('fbadge').style.display='none';
+  FD=[...DATA_ALL];renderAll();
 }
-
-function resetFilters() {
-  ['country','category','agent','type'].forEach(id => {
-    selectedFilters[id].clear();
-    updateChipDisplay(id);
-    updateTriggerLabel(id);
-    document.querySelectorAll(`#options-${id} input[type="checkbox"]`).forEach(cb=>cb.checked=false);
-  });
-  ['date-from','date-to','val-min','val-max','price-min','price-max'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.value='';
-  });
-  const dates = RAW_DATA.map(r=>parseDate(getVal(r,['date','Date','DATE','transaction date','Transaction Date']))).filter(Boolean).sort((a,b)=>a-b);
-  if(dates.length){
-    document.getElementById('date-from').value = dates[0].toISOString().slice(0,10);
-    document.getElementById('date-to').value = dates[dates.length-1].toISOString().slice(0,10);
-  }
-  document.getElementById('active-filters-bar').classList.add('hidden');
-  document.getElementById('filter-count-badge').style.display='none';
-  FILTERED_DATA = [...RAW_DATA];
-  renderAll();
-}
-
-// ============================================================
-// RENDER ALL
-// ============================================================
-function renderAll() {
-  renderKPIs();
-  renderMonthlyChart();
-  renderInOutDonut();
-  renderStockTimeChart();
-  renderCategoryChart();
-  renderAgentChart();
-  renderCountryChart();
-  renderClientTable();
-  renderPriceDist();
-  renderAgentCount();
-  renderCatInOut();
-}
-
-// ============================================================
+function toggleTheme(){DARK=!DARK;document.body.classList.toggle('dark',DARK);document.getElementById('ti').textContent=DARK?'☀️':'🌙';document.getElementById('tl').textContent=DARK?'Light':'Dark';updAllCharts();}
 // KPIs
-// ============================================================
-function renderKPIs() {
-  const data = FILTERED_DATA;
-  let totalRev=0, stockOut=0, stockIn=0;
-  const agents=new Set(), clients=new Set(), countries=new Set();
-
-  data.forEach(row=>{
-    const tv = parseNum(getVal(row,['total value','Total Value','total','Total','amount','Amount','value','Value']));
-    const tp = (getVal(row,['type','Type','transaction type','Transaction Type','stock type','Stock Type','in/out','IN/OUT'])||'').toLowerCase();
-    totalRev += tv;
-    if (tp.includes('out') || tp.includes('sale') || tp.includes('export')) stockOut += tv;
-    if (tp.includes('in') || tp.includes('purchase') || tp.includes('import')) stockIn += tv;
-    const ag = getVal(row,['agent','Agent','AGENT','agent name','Agent Name']); if(ag) agents.add(ag);
-    const cl = getVal(row,['client','Client','supplier','Supplier','client/supplier','Client/Supplier','partner','Partner']); if(cl) clients.add(cl);
-    const co = getVal(row,['country','Country','COUNTRY']); if(co) countries.add(co);
+function renderKPIs(){
+  let rev=0,out=0,inp=0,qout=0,qin=0;const cl=new Set();
+  FD.forEach(r=>{
+    const tv=pn(r['Total Value (₱)']),tp=r['Transaction Type'];
+    rev+=tv;
+    if(tp==='OUT'){out+=tv;qout+=parseFloat(r['Qty OUT'])||0}
+    if(tp==='IN'){inp+=tv;qin+=parseFloat(r['Qty IN'])||0}
+    if(r['Client / Supplier'])cl.add(r['Client / Supplier']);
   });
-
-  document.getElementById('kpi-revenue').textContent = fmt(totalRev);
-  document.getElementById('kpi-revenue-sub').textContent = `${fmtNum(data.length)} transactions total`;
-  document.getElementById('kpi-txn').textContent = fmtNum(data.length);
-  document.getElementById('kpi-txn-sub').textContent = `Across ${countries.size} countries`;
-  document.getElementById('kpi-out').textContent = fmt(stockOut);
-  document.getElementById('kpi-out-sub').textContent = stockOut ? `${((stockOut/totalRev)*100).toFixed(1)}% of total` : '';
-  document.getElementById('kpi-in').textContent = fmt(stockIn);
-  document.getElementById('kpi-in-sub').textContent = stockIn ? `${((stockIn/totalRev)*100).toFixed(1)}% of total` : '';
-  document.getElementById('kpi-agents').textContent = agents.size;
-  document.getElementById('kpi-agents-sub').textContent = `Handling operations`;
-  document.getElementById('kpi-clients').textContent = clients.size;
-  document.getElementById('kpi-clients-sub').textContent = `Unique partners`;
-  document.getElementById('kpi-countries').textContent = countries.size;
-  document.getElementById('kpi-countries-sub').textContent = `Geographic reach`;
-  const avg = data.length ? totalRev/data.length : 0;
-  document.getElementById('kpi-avg').textContent = fmt(avg);
-  document.getElementById('kpi-avg-sub').textContent = `Per transaction`;
+  const set=(id,v,s)=>{document.getElementById(id).textContent=v;document.getElementById(id+'s').textContent=s||''};
+  set('k1',fmt(rev),`${FD.length} total transactions`);
+  set('k2',FD.length.toLocaleString(),`Across ${new Set(FD.map(r=>r['Country'])).size} countries`);
+  set('k3',fmt(out),out?`${((out/rev)*100).toFixed(1)}% of total`:'');
+  set('k4',fmt(inp),inp?`${((inp/rev)*100).toFixed(1)}% of total`:'');
+  set('k5',fmt(FD.length?rev/FD.length:0),'Per transaction');
+  set('k6',Math.round(qout).toLocaleString(),'Units sold/shipped');
+  set('k7',Math.round(qin).toLocaleString(),'Units received');
+  set('k8',cl.size.toLocaleString(),'Unique partners');
 }
-
-// ============================================================
-// CHART HELPERS
-// ============================================================
-function destroyChart(id) { if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id];} }
-function baseOptions(yLabel='Value (₱)') {
-  return {
-    responsive: true, maintainAspectRatio: false,
-    plugins: {
-      legend: { labels: { color: chartTextColor(), font:{family:'Inter',size:11}, boxWidth:12, padding:10 } },
-      tooltip: { backgroundColor: isDark?'#111f16':'#fff', titleColor: isDark?'#e8f5ee':'#0d2e1a', bodyColor: isDark?'#a8d4b8':'#3d6b50', borderColor: isDark?'#1e3a28':'#c8e8d5', borderWidth:1, cornerRadius:8, padding:10, callbacks:{ label: ctx => ` ${fmt(ctx.raw)}` } }
-    },
-    scales: {
-      x: { ticks: { color:chartTextColor(), font:{family:'Inter',size:10} }, grid: { color:chartGridColor() } },
-      y: { ticks: { color:chartTextColor(), font:{family:'Inter',size:10}, callback: v=>fmt(v) }, grid: { color:chartGridColor() }, title: { display:false } }
-    }
-  };
+// Charts
+function dChart(id){if(CH[id]){CH[id].destroy();delete CH[id];}}
+function bOpts(){return{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:gtc(),font:{family:'Inter',size:10},boxWidth:11,padding:8}},tooltip:{backgroundColor:DARK?'#111f16':'#fff',titleColor:DARK?'#e8f5ee':'#0d2e1a',bodyColor:DARK?'#a8d4b8':'#3d6b50',borderColor:DARK?'#1e3a28':'#c8e8d5',borderWidth:1,cornerRadius:7,padding:9}},scales:{x:{ticks:{color:gtc(),font:{family:'Inter',size:9}},grid:{color:gc()}},y:{ticks:{color:gtc(),font:{family:'Inter',size:9},callback:v=>fmt(v)},grid:{color:gc()}}}}}
+// Monthly chart
+function rMonthly(){
+  dChart('monthly');
+  const mm={};FD.forEach(r=>{const d=pd(r['Date']);if(!d)return;const k=mk(d);if(!mm[k])mm[k]={r:0,c:0};mm[k].r+=pn(r['Total Value (₱)']);mm[k].c++});
+  const ks=Object.keys(mm).sort(),lb=ks.map(ml),rv=ks.map(k=>mm[k].r),cn=ks.map(k=>mm[k].c);
+  if(!ks.length)return;
+  document.getElementById('b-monthly').textContent=ks.length?`${ml(ks[0])} – ${ml(ks[ks.length-1])}`:'-';
+  const ctx=document.getElementById('c-monthly').getContext('2d');
+  CH['monthly']=new Chart(ctx,{type:'bar',data:{labels:lb,datasets:[
+    {label:'Revenue (₱)',data:rv,backgroundColor:'#0d5c2ecc',borderColor:'#0d5c2e',borderWidth:1,yAxisID:'y',order:2,borderRadius:3},
+    {label:'Deals',data:cn,type:'line',borderColor:'#2ecc71',backgroundColor:'#2ecc7122',tension:.4,fill:true,yAxisID:'y1',order:1,pointRadius:3,pointBackgroundColor:'#2ecc71'}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:gtc(),font:{family:'Inter',size:10},boxWidth:11}},tooltip:{backgroundColor:DARK?'#111f16':'#fff',titleColor:DARK?'#e8f5ee':'#0d2e1a',bodyColor:DARK?'#a8d4b8':'#3d6b50',borderColor:DARK?'#1e3a28':'#c8e8d5',borderWidth:1,cornerRadius:7,padding:9}},scales:{x:{ticks:{color:gtc(),font:{family:'Inter',size:9},maxRotation:40},grid:{color:gc()}},y:{ticks:{color:gtc(),font:{family:'Inter',size:9},callback:v=>fmt(v)},grid:{color:gc()},position:'left'},y1:{ticks:{color:'#2ecc71',font:{family:'Inter',size:9}},grid:{display:false},position:'right'}}}});
 }
-
-// ============================================================
-// CHART 1: Monthly Revenue + Transaction Count
-// ============================================================
-function renderMonthlyChart() {
-  destroyChart('monthly');
-  const monthMap = {};
-  FILTERED_DATA.forEach(row=>{
-    const d = parseDate(getVal(row,['date','Date','DATE','transaction date','Transaction Date']));
-    if(!d) return;
-    const k = monthKey(d);
-    if(!monthMap[k]) monthMap[k]={rev:0,cnt:0};
-    monthMap[k].rev += parseNum(getVal(row,['total value','Total Value','total','Total','amount','Amount','value','Value']));
-    monthMap[k].cnt++;
-  });
-  const keys = Object.keys(monthMap).sort();
-  const labels = keys.map(monthLabel);
-  const revs = keys.map(k=>monthMap[k].rev);
-  const cnts = keys.map(k=>monthMap[k].cnt);
-  if(!keys.length){document.getElementById('chart-monthly').parentElement.innerHTML='<div class="no-data">No data available</div>';return;}
-  document.getElementById('badge-monthly').textContent = `${labels[0]} – ${labels[labels.length-1]}`;
-  const ctx = document.getElementById('chart-monthly').getContext('2d');
-  CHARTS['monthly'] = new Chart(ctx,{
-    type:'bar',
-    data:{
-      labels,
-      datasets:[
-        {label:'Revenue (₱)',data:revs,backgroundColor:GF_GREENS[0]+'cc',borderColor:GF_GREENS[0],borderWidth:1,yAxisID:'y',order:2,borderRadius:4},
-        {label:'Transactions',data:cnts,type:'line',borderColor:GF_GREENS[2],backgroundColor:GF_GREENS[2]+'22',tension:0.4,fill:true,yAxisID:'y1',order:1,pointRadius:3,pointBackgroundColor:GF_GREENS[2]}
-      ]
-    },
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{color:chartTextColor(),font:{family:'Inter',size:11},boxWidth:12}},tooltip:{backgroundColor:isDark?'#111f16':'#fff',titleColor:isDark?'#e8f5ee':'#0d2e1a',bodyColor:isDark?'#a8d4b8':'#3d6b50',borderColor:isDark?'#1e3a28':'#c8e8d5',borderWidth:1,cornerRadius:8,padding:10}},
-      scales:{
-        x:{ticks:{color:chartTextColor(),font:{family:'Inter',size:10},maxRotation:45},grid:{color:chartGridColor()}},
-        y:{ticks:{color:chartTextColor(),font:{family:'Inter',size:10},callback:v=>fmt(v)},grid:{color:chartGridColor()},position:'left'},
-        y1:{ticks:{color:GF_GREENS[2],font:{family:'Inter',size:10}},grid:{display:false},position:'right'}
-      }
-    }
-  });
+// Donut
+function rDonut(){
+  dChart('donut');const m={};
+  FD.forEach(r=>{const tp=r['Transaction Type']||'Other';const tv=pn(r['Total Value (₱)']);if(tv>0)m[tp]=(m[tp]||0)+tv});
+  const lb=Object.keys(m),vl=lb.map(l=>m[l]);
+  if(!lb.length)return;
+  CH['donut']=new Chart(document.getElementById('c-donut').getContext('2d'),{type:'doughnut',data:{labels:lb,datasets:[{data:vl,backgroundColor:col(lb.length),borderWidth:2,borderColor:DARK?'#111f16':'#fff',hoverOffset:7}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{color:gtc(),font:{family:'Inter',size:10},padding:7,boxWidth:10}},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${fmt(ctx.raw)}`},backgroundColor:DARK?'#111f16':'#fff',titleColor:DARK?'#e8f5ee':'#0d2e1a',bodyColor:DARK?'#a8d4b8':'#3d6b50',borderColor:DARK?'#1e3a28':'#c8e8d5',borderWidth:1,cornerRadius:7,padding:9}}}});
 }
-
-// ============================================================
-// CHART 2: Stock IN vs OUT Donut
-// ============================================================
-function renderInOutDonut() {
-  destroyChart('inout-donut');
-  const map={};
-  FILTERED_DATA.forEach(row=>{
-    const tp = getVal(row,['type','Type','transaction type','Transaction Type','stock type','Stock Type','in/out','IN/OUT'])||'Unknown';
-    const tv = parseNum(getVal(row,['total value','Total Value','total','Total','amount','Amount','value','Value']));
-    map[tp]=(map[tp]||0)+tv;
-  });
-  const labels=Object.keys(map), vals=labels.map(l=>map[l]);
-  if(!labels.length){return;}
-  const ctx=document.getElementById('chart-inout-donut').getContext('2d');
-  CHARTS['inout-donut']=new Chart(ctx,{
-    type:'doughnut',
-    data:{labels,datasets:[{data:vals,backgroundColor:getColors(labels.length),borderWidth:2,borderColor:isDark?'#111f16':'#fff',hoverOffset:8}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{color:chartTextColor(),font:{family:'Inter',size:10},padding:8,boxWidth:10}},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${fmt(ctx.raw)}`},backgroundColor:isDark?'#111f16':'#fff',titleColor:isDark?'#e8f5ee':'#0d2e1a',bodyColor:isDark?'#a8d4b8':'#3d6b50',borderColor:isDark?'#1e3a28':'#c8e8d5',borderWidth:1,cornerRadius:8,padding:10}}}
-  });
+// Flow
+function rFlow(){
+  dChart('flow');const mi={},mo={};
+  FD.forEach(r=>{const d=pd(r['Date']);if(!d)return;const k=mk(d);const tv=pn(r['Total Value (₱)']);if(r['Transaction Type']==='IN'&&tv>0)mi[k]=(mi[k]||0)+tv;if(r['Transaction Type']==='OUT'&&tv>0)mo[k]=(mo[k]||0)+tv});
+  const ks=[...new Set([...Object.keys(mi),...Object.keys(mo)])].sort();if(!ks.length)return;
+  CH['flow']=new Chart(document.getElementById('c-flow').getContext('2d'),{type:'line',data:{labels:ks.map(ml),datasets:[
+    {label:'Stock IN',data:ks.map(k=>mi[k]||0),borderColor:'#1a7a3f',backgroundColor:'#1a7a3f33',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#1a7a3f'},
+    {label:'Stock OUT',data:ks.map(k=>mo[k]||0),borderColor:'#2ecc71',backgroundColor:'#2ecc7133',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#2ecc71'}
+  ]},options:{...bOpts(),scales:{x:{ticks:{color:gtc(),font:{family:'Inter',size:9},maxRotation:40},grid:{color:gc()}},y:{ticks:{color:gtc(),font:{family:'Inter',size:9},callback:v=>fmt(v)},grid:{color:gc()}}}}});
 }
-
-// ============================================================
-// CHART 3: Stock IN vs OUT Over Time
-// ============================================================
-function renderStockTimeChart() {
-  destroyChart('stock-time');
-  const monthIn={},monthOut={};
-  FILTERED_DATA.forEach(row=>{
-    const d=parseDate(getVal(row,['date','Date','DATE','transaction date','Transaction Date']));
-    if(!d) return;
-    const k=monthKey(d);
-    const tv=parseNum(getVal(row,['total value','Total Value','total','Total','amount','Amount','value','Value']));
-    const tp=(getVal(row,['type','Type','transaction type','Transaction Type','stock type','Stock Type','in/out','IN/OUT'])||'').toLowerCase();
-    if(tp.includes('in')||tp.includes('import')||tp.includes('purchase')){monthIn[k]=(monthIn[k]||0)+tv;}
-    else{monthOut[k]=(monthOut[k]||0)+tv;}
-  });
-  const allKeys=[...new Set([...Object.keys(monthIn),...Object.keys(monthOut)])].sort();
-  const labels=allKeys.map(monthLabel);
-  if(!allKeys.length) return;
-  const ctx=document.getElementById('chart-stock-time').getContext('2d');
-  CHARTS['stock-time']=new Chart(ctx,{
-    type:'line',
-    data:{labels,datasets:[
-      {label:'Stock IN',data:allKeys.map(k=>monthIn[k]||0),borderColor:GF_GREENS[1],backgroundColor:GF_GREENS[1]+'33',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:GF_GREENS[1]},
-      {label:'Stock OUT',data:allKeys.map(k=>monthOut[k]||0),borderColor:GF_GREENS[4],backgroundColor:GF_GREENS[4]+'33',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:GF_GREENS[4]}
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:chartTextColor(),font:{family:'Inter',size:11},boxWidth:12}},tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${fmt(ctx.raw)}`},backgroundColor:isDark?'#111f16':'#fff',titleColor:isDark?'#e8f5ee':'#0d2e1a',bodyColor:isDark?'#a8d4b8':'#3d6b50',borderColor:isDark?'#1e3a28':'#c8e8d5',borderWidth:1,cornerRadius:8,padding:10}},scales:{x:{ticks:{color:chartTextColor(),font:{family:'Inter',size:10},maxRotation:45},grid:{color:chartGridColor()}},y:{ticks:{color:chartTextColor(),font:{family:'Inter',size:10},callback:v=>fmt(v)},grid:{color:chartGridColor()}}}}
+// Category
+function rCat(){
+  dChart('cat');const m={};
+  FD.forEach(r=>{const c=r['Category']||'Other';const tv=pn(r['Total Value (₱)']);if(tv>0)m[c]=(m[c]||0)+tv});
+  const s=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if(!s.length)return;
+  CH['cat']=new Chart(document.getElementById('c-cat').getContext('2d'),{type:'bar',data:{labels:s.map(e=>e[0]),datasets:[{label:'Revenue',data:s.map(e=>e[1]),backgroundColor:col(s.length),borderRadius:3,borderWidth:0}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.raw)}`},backgroundColor:DARK?'#111f16':'#fff',titleColor:DARK?'#e8f5ee':'#0d2e1a',bodyColor:DARK?'#a8d4b8':'#3d6b50',borderColor:DARK?'#1e3a28':'#c8e8d5',borderWidth:1,cornerRadius:7,padding:9}},scales:{x:{ticks:{color:gtc(),font:{family:'Inter',size:9},callback:v=>fmt(v)},grid:{color:gc()}},y:{ticks:{color:gtc(),font:{family:'Inter',size:9}},grid:{display:false}}}}});
+}
+// Clients table
+function rClients(){
+  const m={};FD.forEach(r=>{const c=r['Client / Supplier'];if(!c)return;const tv=pn(r['Total Value (₱)']);if(tv>0)m[c]=(m[c]||0)+tv});
+  const total=Object.values(m).reduce((a,b)=>a+b,0);
+  const s=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  const tb=document.getElementById('t-clients');tb.innerHTML='';
+  s.forEach(([n,v],i)=>{const p=total?(v/total*100):0;const tr=document.createElement('tr');tr.innerHTML=`<td><span class="rb">${i+1}</span></td><td style="font-weight:600;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${n}">${n}</td><td style="font-weight:700;color:#1a7a3f">${fmt(v)}</td><td><div class="bm" style="width:${Math.max(p,3)}%"></div><div style="font-size:.6rem;color:var(--tm);margin-top:1px">${p.toFixed(1)}%</div></td>`;tb.appendChild(tr)});
+}
+// Country
+function rCountry(){
+  dChart('country');const m={};
+  FD.forEach(r=>{const c=r['Country']||'Unknown';const tv=pn(r['Total Value (₱)']);if(tv>0)m[c]=(m[c]||0)+tv;else{m[c]=(m[c]||0)}});
+  // Also count by qty for countries with no value
+  const mq={};FD.forEach(r=>{const c=r['Country']||'Unknown';mq[c]=(mq[c]||0)+1});
+  const lb=Object.keys(mq),vl=lb.map(l=>m[l]||0),qv=lb.map(l=>mq[l]);
+  if(!lb.length)return;
+  CH['country']=new Chart(document.getElementById('c-country').getContext('2d'),{type:'doughnut',data:{labels:lb,datasets:[{data:qv,backgroundColor:col(lb.length),borderWidth:2,borderColor:DARK?'#111f16':'#fff',hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{position:'bottom',labels:{color:gtc(),font:{family:'Inter',size:11},padding:8,boxWidth:12}},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.raw} transactions`},backgroundColor:DARK?'#111f16':'#fff',titleColor:DARK?'#e8f5ee':'#0d2e1a',bodyColor:DARK?'#a8d4b8':'#3d6b50',borderColor:DARK?'#1e3a28':'#c8e8d5',borderWidth:1,cornerRadius:7,padding:9}}}});
+}
+// Cat flow
+function rCatFlow(){
+  dChart('catflow');const mi={},mo={};
+  FD.forEach(r=>{const c=r['Category']||'Other';const qi=parseFloat(r['Qty IN'])||0,qo=parseFloat(r['Qty OUT'])||0;if(qi>0)mi[c]=(mi[c]||0)+qi;if(qo>0)mo[c]=(mo[c]||0)+qo});
+  const cats=[...new Set([...Object.keys(mi),...Object.keys(mo)])].sort((a,b)=>((mo[b]||0)+(mi[b]||0))-((mo[a]||0)+(mi[a]||0))).slice(0,7);
+  if(!cats.length)return;
+  CH['catflow']=new Chart(document.getElementById('c-catflow').getContext('2d'),{type:'bar',data:{labels:cats,datasets:[{label:'Qty IN',data:cats.map(c=>mi[c]||0),backgroundColor:'#1a7a3fcc',borderRadius:3,borderWidth:0},{label:'Qty OUT',data:cats.map(c=>mo[c]||0),backgroundColor:'#2ecc71cc',borderRadius:3,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:gtc(),font:{family:'Inter',size:10},boxWidth:10}},tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.raw.toLocaleString()} units`},backgroundColor:DARK?'#111f16':'#fff',titleColor:DARK?'#e8f5ee':'#0d2e1a',bodyColor:DARK?'#a8d4b8':'#3d6b50',borderColor:DARK?'#1e3a28':'#c8e8d5',borderWidth:1,cornerRadius:7,padding:9}},scales:{x:{ticks:{color:gtc(),font:{family:'Inter',size:9},maxRotation:30},grid:{color:gc()}},y:{ticks:{color:gtc(),font:{family:'Inter',size:9}},grid:{color:gc()}}}}});
+}
+// Products
+function rProd(){
+  dChart('prod');const m={};
+  FD.forEach(r=>{const p=r['Product Name']||'Unknown';const tv=pn(r['Total Value (₱)']);if(tv>0)m[p]=(m[p]||0)+tv});
+  const s=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,8);if(!s.length)return;
+  CH['prod']=new Chart(document.getElementById('c-prod').getContext('2d'),{type:'bar',data:{labels:s.map(e=>e[0]),datasets:[{label:'Revenue',data:s.map(e=>e[1]),backgroundColor:col(s.length),borderRadius:3,borderWidth:0}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.raw)}`},backgroundColor:DARK?'#111f16':'#fff',titleColor:DARK?'#e8f5ee':'#0d2e1a',bodyColor:DARK?'#a8d4b8':'#3d6b50',borderColor:DARK?'#1e3a28':'#c8e8d5',borderWidth:1,cornerRadius:7,padding:9}},scales:{x:{ticks:{color:gtc(),font:{family:'Inter',size:9},callback:v=>fmt(v)},grid:{color:gc()}},y:{ticks:{color:gtc(),font:{family:'Inter',size:9}},grid:{display:false}}}}});
+}
+// Qty
+function rQty(){
+  dChart('qty');const m={};
+  FD.forEach(r=>{const c=r['Category']||'Other';const q=(parseFloat(r['Qty IN'])||0)+(parseFloat(r['Qty OUT'])||0);m[c]=(m[c]||0)+q});
+  const s=Object.entries(m).sort((a,b)=>b[1]-a[1]);if(!s.length)return;
+  CH['qty']=new Chart(document.getElementById('c-qty').getContext('2d'),{type:'bar',data:{labels:s.map(e=>e[0]),datasets:[{label:'Total Units',data:s.map(e=>e[1]),backgroundColor:GR.slice(0,s.length),borderRadius:4,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.raw.toLocaleString()} units`},backgroundColor:DARK?'#111f16':'#fff',titleColor:DARK?'#e8f5ee':'#0d2e1a',bodyColor:DARK?'#a8d4b8':'#3d6b50',borderColor:DARK?'#1e3a28':'#c8e8d5',borderWidth:1,cornerRadius:7,padding:9}},scales:{x:{ticks:{color:gtc(),font:{family:'Inter',size:9},maxRotation:30},grid:{color:gc()}},y:{ticks:{color:gtc(),font:{family:'Inter',size:9}},grid:{color:gc()}}}}});
+}
+// Txn count
+function rTxn(){
+  dChart('txn');const m={};
+  FD.forEach(r=>{const d=pd(r['Date']);if(!d)return;const k=mk(d);m[k]=(m[k]||0)+1});
+  const ks=Object.keys(m).sort();if(!ks.length)return;
+  CH['txn']=new Chart(document.getElementById('c-txn').getContext('2d'),{type:'line',data:{labels:ks.map(ml),datasets:[{label:'Transactions',data:ks.map(k=>m[k]),borderColor:'#0d5c2e',backgroundColor:'#0d5c2e22',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#0d5c2e'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.raw} deals`},backgroundColor:DARK?'#111f16':'#fff',titleColor:DARK?'#e8f5ee':'#0d2e1a',bodyColor:DARK?'#a8d4b8':'#3d6b50',borderColor:DARK?'#1e3a28':'#c8e8d5',borderWidth:1,cornerRadius:7,padding:9}},scales:{x:{ticks:{color:gtc(),font:{family:'Inter',size:9},maxRotation:40},grid:{color:gc()}},y:{ticks:{color:gtc(),font:{family:'Inter',size:9}},grid:{color:gc()}}}}});
+}
+function renderAll(){renderKPIs();rMonthly();rDonut();rFlow();rCat();rClients();rCountry();rCatFlow();rProd();rQty();rTxn();}
+function updAllCharts(){
+  Object.values(CH).forEach(c=>{if(!c)return;
+    if(c.options.scales){if(c.options.scales.x){c.options.scales.x.ticks.color=gtc();c.options.scales.x.grid.color=gc()}if(c.options.scales.y){c.options.scales.y.ticks.color=gtc();c.options.scales.y.grid.color=gc()}if(c.options.scales.y1)c.options.scales.y1.ticks.color='#2ecc71'}
+    if(c.options.plugins.legend)c.options.plugins.legend.labels.color=gtc();
+    c.update();
   });
 }
-
-// ============================================================
-// CHART 4: Revenue by Category
-// ============================================================
-function renderCategoryChart() {
-  destroyChart('category');
-  const map={};
-  FILTERED_DATA.forEach(row=>{
-    const cat=getVal(row,['category','Category','CATEGORY','item category','Item Category'])||'Unknown';
-    const tv=parseNum(getVal(row,['total value','Total Value','total','Total','amount','Amount','value','Value']));
-    map[cat]=(map[cat]||0)+tv;
-  });
-  const sorted=Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  const labels=sorted.map(e=>e[0]),vals=sorted.map(e=>e[1]);
-  if(!labels.length) return;
-  const ctx=document.getElementById('chart-category').getContext('2d');
-  CHARTS['category']=new Chart(ctx,{
-    type:'bar',
-    data:{labels,datasets:[{label:'Revenue',data:vals,backgroundColor:getColors(labels.length),borderRadius:4,borderWidth:0}]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.raw)}`},backgroundColor:isDark?'#111f16':'#fff',titleColor:isDark?'#e8f5ee':'#0d2e1a',bodyColor:isDark?'#a8d4b8':'#3d6b50',borderColor:isDark?'#1e3a28':'#c8e8d5',borderWidth:1,cornerRadius:8,padding:10}},scales:{x:{ticks:{color:chartTextColor(),font:{family:'Inter',size:9},callback:v=>fmt(v)},grid:{color:chartGridColor()}},y:{ticks:{color:chartTextColor(),font:{family:'Inter',size:10}},grid:{display:false}}}}
-  });
-}
-
-// ============================================================
-// CHART 5: Agent Performance
-// ============================================================
-function renderAgentChart() {
-  destroyChart('agent');
-  const map={};
-  FILTERED_DATA.forEach(row=>{
-    const ag=getVal(row,['agent','Agent','AGENT','agent name','Agent Name'])||'Unknown';
-    const tv=parseNum(getVal(row,['total value','Total Value','total','Total','amount','Amount','value','Value']));
-    map[ag]=(map[ag]||0)+tv;
-  });
-  const sorted=Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  const labels=sorted.map(e=>e[0]),vals=sorted.map(e=>e[1]);
-  if(!labels.length) return;
-  const ctx=document.getElementById('chart-agent').getContext('2d');
-  CHARTS['agent']=new Chart(ctx,{
-    type:'bar',
-    data:{labels,datasets:[{label:'Revenue Handled',data:vals,backgroundColor:GF_GREENS.slice(0,labels.length),borderRadius:4,borderWidth:0}]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.raw)}`},backgroundColor:isDark?'#111f16':'#fff',titleColor:isDark?'#e8f5ee':'#0d2e1a',bodyColor:isDark?'#a8d4b8':'#3d6b50',borderColor:isDark?'#1e3a28':'#c8e8d5',borderWidth:1,cornerRadius:8,padding:10}},scales:{x:{ticks:{color:chartTextColor(),font:{family:'Inter',size:9},callback:v=>fmt(v)},grid:{color:chartGridColor()}},y:{ticks:{color:chartTextColor(),font:{family:'Inter',size:10}},grid:{display:false}}}}
-  });
-}
-
-// ============================================================
-// CHART 6: Revenue by Country
-// ============================================================
-function renderCountryChart() {
-  destroyChart('country');
-  const map={};
-  FILTERED_DATA.forEach(row=>{
-    const co=getVal(row,['country','Country','COUNTRY'])||'Unknown';
-    const tv=parseNum(getVal(row,['total value','Total Value','total','Total','amount','Amount','value','Value']));
-    map[co]=(map[co]||0)+tv;
-  });
-  const sorted=Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const labels=sorted.map(e=>e[0]),vals=sorted.map(e=>e[1]);
-  if(!labels.length) return;
-  const ctx=document.getElementById('chart-country').getContext('2d');
-  CHARTS['country']=new Chart(ctx,{
-    type:'pie',
-    data:{labels,datasets:[{data:vals,backgroundColor:getColors(labels.length),borderWidth:2,borderColor:isDark?'#111f16':'#fff',hoverOffset:6}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:chartTextColor(),font:{family:'Inter',size:9},padding:6,boxWidth:10}},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${fmt(ctx.raw)}`},backgroundColor:isDark?'#111f16':'#fff',titleColor:isDark?'#e8f5ee':'#0d2e1a',bodyColor:isDark?'#a8d4b8':'#3d6b50',borderColor:isDark?'#1e3a28':'#c8e8d5',borderWidth:1,cornerRadius:8,padding:10}}}
-  });
-}
-
-// ============================================================
-// CHART 7: Client/Supplier Table
-// ============================================================
-function renderClientTable() {
-  const map={};
-  FILTERED_DATA.forEach(row=>{
-    const cl=getVal(row,['client','Client','supplier','Supplier','client/supplier','Client/Supplier','partner','Partner','company','Company','name','Name'])||'Unknown';
-    const tv=parseNum(getVal(row,['total value','Total Value','total','Total','amount','Amount','value','Value']));
-    map[cl]=(map[cl]||0)+tv;
-  });
-  const total=Object.values(map).reduce((a,b)=>a+b,0);
-  const sorted=Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,12);
-  const tbody=document.getElementById('table-clients');
-  tbody.innerHTML='';
-  sorted.forEach(([name,val],i)=>{
-    const pct=total?(val/total*100):0;
-    const tr=document.createElement('tr');
-    tr.innerHTML=`
-      <td><span class="rank-badge">${i+1}</span></td>
-      <td style="font-weight:600;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${name}">${name}</td>
-      <td style="font-weight:700;color:var(--gf-mid);">${fmt(val)}</td>
-      <td><div class="bar-mini" style="width:${pct}%;"></div><div style="font-size:0.62rem;color:var(--text-muted);margin-top:2px;">${pct.toFixed(1)}%</div></td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-// ============================================================
-// CHART 8: Unit Price Distribution
-// ============================================================
-function renderPriceDist() {
-  destroyChart('price-dist');
-  const prices=FILTERED_DATA.map(r=>parseNum(getVal(r,['unit price','Unit Price','price','Price','rate','Rate']))).filter(v=>v>0);
-  if(!prices.length) return;
-  const max=Math.max(...prices);
-  const buckets=8;
-  const step=max/buckets;
-  const counts=Array(buckets).fill(0);
-  const bucketLabels=Array.from({length:buckets},(_,i)=>`${fmt(i*step)}–${fmt((i+1)*step)}`);
-  prices.forEach(p=>{ const b=Math.min(Math.floor(p/step),buckets-1); counts[b]++; });
-  const ctx=document.getElementById('chart-price-dist').getContext('2d');
-  CHARTS['price-dist']=new Chart(ctx,{
-    type:'bar',
-    data:{labels:bucketLabels,datasets:[{label:'Count',data:counts,backgroundColor:GF_GREENS[2]+'bb',borderColor:GF_GREENS[2],borderWidth:1,borderRadius:4}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.raw} transactions`},backgroundColor:isDark?'#111f16':'#fff',titleColor:isDark?'#e8f5ee':'#0d2e1a',bodyColor:isDark?'#a8d4b8':'#3d6b50',borderColor:isDark?'#1e3a28':'#c8e8d5',borderWidth:1,cornerRadius:8,padding:10}},scales:{x:{ticks:{color:chartTextColor(),font:{family:'Inter',size:9},maxRotation:35},grid:{color:chartGridColor()}},y:{ticks:{color:chartTextColor(),font:{family:'Inter',size:10}},grid:{color:chartGridColor()}}}}
-  });
-}
-
-// ============================================================
-// CHART 9: Agent Transaction Count
-// ============================================================
-function renderAgentCount() {
-  destroyChart('agent-count');
-  const map={};
-  FILTERED_DATA.forEach(row=>{
-    const ag=getVal(row,['agent','Agent','AGENT','agent name','Agent Name'])||'Unknown';
-    map[ag]=(map[ag]||0)+1;
-  });
-  const sorted=Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  const labels=sorted.map(e=>e[0]),vals=sorted.map(e=>e[1]);
-  if(!labels.length) return;
-  const ctx=document.getElementById('chart-agent-count').getContext('2d');
-  CHARTS['agent-count']=new Chart(ctx,{
-    type:'bar',
-    data:{labels,datasets:[{label:'Transactions',data:vals,backgroundColor:GF_GREENS.map(c=>c+'cc'),borderRadius:4,borderWidth:0}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.raw} deals`},backgroundColor:isDark?'#111f16':'#fff',titleColor:isDark?'#e8f5ee':'#0d2e1a',bodyColor:isDark?'#a8d4b8':'#3d6b50',borderColor:isDark?'#1e3a28':'#c8e8d5',borderWidth:1,cornerRadius:8,padding:10}},scales:{x:{ticks:{color:chartTextColor(),font:{family:'Inter',size:9},maxRotation:35},grid:{color:chartGridColor()}},y:{ticks:{color:chartTextColor(),font:{family:'Inter',size:10}},grid:{color:chartGridColor()}}}}
-  });
-}
-
-// ============================================================
-// CHART 10: Category IN vs OUT
-// ============================================================
-function renderCatInOut() {
-  destroyChart('cat-inout');
-  const mapIn={}, mapOut={};
-  FILTERED_DATA.forEach(row=>{
-    const cat=getVal(row,['category','Category','CATEGORY','item category','Item Category'])||'Unknown';
-    const tv=parseNum(getVal(row,['total value','Total Value','total','Total','amount','Amount','value','Value']));
-    const tp=(getVal(row,['type','Type','transaction type','Transaction Type','stock type','Stock Type','in/out','IN/OUT'])||'').toLowerCase();
-    if(tp.includes('in')||tp.includes('import')||tp.includes('purchase')){mapIn[cat]=(mapIn[cat]||0)+tv;}
-    else{mapOut[cat]=(mapOut[cat]||0)+tv;}
-  });
-  const allCats=[...new Set([...Object.keys(mapIn),...Object.keys(mapOut)])].sort();
-  const top=allCats.sort((a,b)=>((mapIn[b]||0)+(mapOut[b]||0))-((mapIn[a]||0)+(mapOut[a]||0))).slice(0,8);
-  if(!top.length) return;
-  const ctx=document.getElementById('chart-cat-inout').getContext('2d');
-  CHARTS['cat-inout']=new Chart(ctx,{
-    type:'bar',
-    data:{labels:top,datasets:[
-      {label:'Stock IN',data:top.map(c=>mapIn[c]||0),backgroundColor:GF_GREENS[1]+'cc',borderRadius:4,borderWidth:0},
-      {label:'Stock OUT',data:top.map(c=>mapOut[c]||0),backgroundColor:GF_GREENS[4]+'cc',borderRadius:4,borderWidth:0}
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:chartTextColor(),font:{family:'Inter',size:10},boxWidth:10}},tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${fmt(ctx.raw)}`},backgroundColor:isDark?'#111f16':'#fff',titleColor:isDark?'#e8f5ee':'#0d2e1a',bodyColor:isDark?'#a8d4b8':'#3d6b50',borderColor:isDark?'#1e3a28':'#c8e8d5',borderWidth:1,cornerRadius:8,padding:10}},scales:{x:{stacked:false,ticks:{color:chartTextColor(),font:{family:'Inter',size:9},maxRotation:35},grid:{color:chartGridColor()}},y:{ticks:{color:chartTextColor(),font:{family:'Inter',size:10},callback:v=>fmt(v)},grid:{color:chartGridColor()}}}}
-  });
-}
-
-// ============================================================
-// UPDATE ALL CHARTS (for theme change)
-// ============================================================
-function updateAllCharts() {
-  Object.values(CHARTS).forEach(chart=>{
-    if(!chart) return;
-    // Update grid and text colors
-    if(chart.options.scales){
-      if(chart.options.scales.x){chart.options.scales.x.ticks.color=chartTextColor();chart.options.scales.x.grid.color=chartGridColor();}
-      if(chart.options.scales.y){chart.options.scales.y.ticks.color=chartTextColor();chart.options.scales.y.grid.color=chartGridColor();}
-      if(chart.options.scales.y1){chart.options.scales.y1.ticks.color=GF_GREENS[2];}
-    }
-    if(chart.options.plugins.legend) chart.options.plugins.legend.labels.color=chartTextColor();
-    chart.update();
-  });
-}
-
-// ============================================================
-// LOAD DATA — with CORS proxy fallback chain
-// ============================================================
-const PROXY_URLS = [
-  CSV_URL,
-  `https://corsproxy.io/?${encodeURIComponent(CSV_URL)}`,
-  `https://api.allorigins.win/raw?url=${encodeURIComponent(CSV_URL)}`,
-  `https://cors-anywhere.herokuapp.com/${CSV_URL}`
-];
-
-function showError(msg) {
-  document.getElementById('loading-screen').innerHTML = `
-    <div style="text-align:center;padding:40px;max-width:480px;">
-      <div style="font-size:2.5rem;margin-bottom:14px;">⚠️</div>
-      <div style="font-weight:800;font-size:1.05rem;color:#c0392b;margin-bottom:10px;">Data Failed to Load</div>
-      <div style="font-size:0.8rem;color:#888;margin-bottom:16px;">${msg}</div>
-      <div style="background:#f0faf4;border:1px solid #c8e8d5;border-radius:12px;padding:16px;text-align:left;font-size:0.75rem;color:#3d6b50;line-height:1.7;">
-        <strong>Likely cause:</strong> Browser is blocking cross-origin requests when opening as a local file.<br><br>
-        <strong>Quick fix options:</strong><br>
-        1️⃣ &nbsp;Open Chrome with <code style="background:#e8f5ee;padding:1px 5px;border-radius:4px;">--disable-web-security</code> flag<br>
-        2️⃣ &nbsp;Upload to <strong>GitHub Pages</strong> or <strong>Hostinger</strong> and open via URL<br>
-        3️⃣ &nbsp;Use a local server: <code style="background:#e8f5ee;padding:1px 5px;border-radius:4px;">python3 -m http.server 8080</code><br>
-        &nbsp;&nbsp;&nbsp;&nbsp;then open <code style="background:#e8f5ee;padding:1px 5px;border-radius:4px;">http://localhost:8080</code>
-      </div>
-      <button onclick="loadData()" style="margin-top:16px;padding:10px 24px;background:linear-gradient(135deg,#0d5c2e,#1a7a3f);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:0.85rem;cursor:pointer;font-family:Inter,sans-serif;">↺ Retry</button>
-    </div>
-  `;
-}
-
-async function fetchWithTimeout(url, ms=10000) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), ms);
-  try {
-    const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(id);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.text();
-  } catch(e) {
-    clearTimeout(id);
-    throw e;
-  }
-}
-
-function revealDashboard() {
-  setTimeout(()=>{
-    const ls = document.getElementById('loading-screen');
-    ls.style.transition = 'opacity 0.4s';
-    ls.style.opacity = '0';
-    setTimeout(()=>{ ls.style.display='none'; }, 400);
-    document.getElementById('app-layout').style.opacity = '1';
-  }, 900);
-}
-
-async function loadData() {
-  // Reset loading screen in case of retry
-  document.getElementById('loading-screen').innerHTML = `
-    <img src="Logo_GreenFarm.png" class="loader-logo" onerror="this.style.display='none'"/>
-    <div class="loader-text">Loading Operations Data…</div>
-    <div class="loader-bar"><div class="loader-bar-fill"></div></div>
-  `;
-  document.getElementById('loading-screen').style.display = 'flex';
-  document.getElementById('loading-screen').style.opacity = '1';
-  document.getElementById('app-layout').style.opacity = '0';
-
-  let csvText = null;
-  let lastError = '';
-
-  for (const url of PROXY_URLS) {
-    try {
-      console.log('Trying:', url);
-      csvText = await fetchWithTimeout(url, 12000);
-      if (csvText && csvText.length > 50) {
-        console.log('Success with:', url);
-        break;
-      }
-    } catch(e) {
-      lastError = e.message;
-      console.warn('Failed:', url, e.message);
-    }
-  }
-
-  if (!csvText || csvText.length < 50) {
-    showError(`All ${PROXY_URLS.length} fetch attempts failed. Last error: ${lastError}`);
-    return;
-  }
-
-  try {
-    const result = Papa.parse(csvText, { header:true, skipEmptyLines:true, trimHeaders:true });
-    RAW_DATA = result.data;
-    FILTERED_DATA = [...RAW_DATA];
-    populateFilters(RAW_DATA);
-    renderAll();
-    revealDashboard();
-  } catch(e) {
-    showError(`CSV parsed but rendering failed: ${e.message}`);
-    console.error(e);
-  }
-}
-
-// ============================================================
 // INIT
-// ============================================================
-Chart.register(ChartDataLabels);
-Chart.defaults.font.family = 'Inter';
-loadData();
+initFilters();
+renderAll();
 </script>
 </body>
 </html>
