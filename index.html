@@ -6,75 +6,95 @@
 <title>GreenFarm INTL — Operations Intelligence Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-/* ── TOKENS ── */
-:root {
-  --bg:      #0d1117;
-  --bg2:     #161b22;
-  --bg3:     #21262d;
-  --border:  #30363d;
-  --text:    #e6edf3;
-  --muted:   #8b949e;
-  --g1:      #1a7f37;
-  --g2:      #2da44e;
-  --g3:      #3fb950;
-  --g4:      #7ee787;
-  --red:     #f85149;
-  --yellow:  #d29922;
-  --blue:    #388bfd;
-  --purple:  #a371f7;
-  --orange:  #ffa657;
-  --shadow:  0 4px 24px rgba(0,0,0,.45);
-  --r:       10px;
-  --sidebar: 270px;
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--border:#30363d;
+  --text:#e6edf3;--muted:#8b949e;
+  --g1:#1a7f37;--g2:#2da44e;--g3:#3fb950;--g4:#7ee787;
+  --red:#f85149;--yellow:#d29922;--blue:#388bfd;--purple:#a371f7;--orange:#ffa657;
+  --shadow:0 4px 24px rgba(0,0,0,.45);--r:10px;--sidebar:272px;
 }
-.light {
-  --bg:     #f2f7f2;
-  --bg2:    #ffffff;
-  --bg3:    #e6f0e6;
-  --border: #bdd8bd;
-  --text:   #1a2e1a;
-  --muted:  #5a7a5a;
-  --shadow: 0 2px 12px rgba(0,60,0,.10);
+.light{
+  --bg:#f2f7f2;--bg2:#ffffff;--bg3:#e8f3e8;--border:#bdd8bd;
+  --text:#1a2e1a;--muted:#5a7a5a;--shadow:0 2px 12px rgba(0,60,0,.10);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s;}
 
-/* ── HEADER ── */
-.hdr{position:sticky;top:0;z-index:200;background:var(--bg2);border-bottom:1px solid var(--border);height:62px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;gap:12px;}
+/* HEADER */
+.hdr{position:sticky;top:0;z-index:200;background:var(--bg2);border-bottom:1px solid var(--border);height:62px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;}
 .hdr-left{display:flex;align-items:center;gap:12px;}
-.logo-svg{width:42px;height:42px;flex-shrink:0;}
-.brand-text{display:flex;flex-direction:column;}
 .brand-text b{font-size:14px;font-weight:800;color:var(--g1);letter-spacing:.6px;}
-.brand-text span{font-size:10px;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;}
+.brand-text span{font-size:10px;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;display:block;}
 .hdr-right{display:flex;align-items:center;gap:10px;}
-.pill{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;font-weight:600;transition:all .2s;}
+.pill{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-weight:600;transition:all .2s;}
 .pill:hover,.pill.active{background:var(--g2);color:#fff;border-color:var(--g2);}
 .tag{font-size:11px;color:var(--muted);}
 
-/* ── LAYOUT ── */
-.shell{display:flex;min-height:calc(100vh - 62px);}
-.sidebar{width:var(--sidebar);background:var(--bg2);border-right:1px solid var(--border);padding:16px 14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;position:sticky;top:62px;height:calc(100vh - 62px);flex-shrink:0;}
+/* TAB NAV */
+.tab-bar{display:flex;gap:2px;background:var(--bg3);padding:6px 22px 0;border-bottom:1px solid var(--border);}
+.tab-btn{background:transparent;border:none;color:var(--muted);padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;border-radius:6px 6px 0 0;}
+.tab-btn:hover{color:var(--text);background:var(--bg2);}
+.tab-btn.active{color:var(--g2);border-bottom-color:var(--g2);background:var(--bg2);}
+.tab-page{display:none;}
+.tab-page.active{display:block;}
+
+/* LAYOUT */
+.shell{display:flex;min-height:calc(100vh - 104px);}
+.sidebar{width:var(--sidebar);background:var(--bg2);border-right:1px solid var(--border);padding:14px 13px;display:flex;flex-direction:column;gap:6px;overflow-y:auto;position:sticky;top:104px;height:calc(100vh - 104px);flex-shrink:0;}
 .main{flex:1;padding:18px 20px;overflow-x:hidden;}
 
-/* ── SIDEBAR ── */
-.sb-title{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1.3px;padding-bottom:6px;border-bottom:1px solid var(--border);}
-.sb-label{font-size:11px;font-weight:700;color:var(--muted);margin-top:10px;margin-bottom:3px;}
-.sb-input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 9px;font-size:12px;outline:none;}
-.sb-input:focus{border-color:var(--g2);}
-.msel{background:var(--bg3);border:1px solid var(--border);border-radius:6px;max-height:105px;overflow-y:auto;}
-.msel label{display:flex;align-items:center;gap:7px;padding:4px 9px;cursor:pointer;font-size:11px;transition:background .15s;}
-.msel label:hover{background:var(--border);}
-.msel input{accent-color:var(--g2);}
-.range-pair{display:flex;gap:5px;align-items:center;}
-.range-pair input{flex:1;}
-.range-pair span{font-size:10px;color:var(--muted);}
-.apply-btn{width:100%;background:var(--g2);color:#fff;border:none;border-radius:7px;padding:9px;font-size:12px;font-weight:800;cursor:pointer;letter-spacing:.5px;transition:background .2s;margin-top:4px;}
-.apply-btn:hover{background:var(--g1);}
-.reset-btn{width:100%;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:7px;padding:7px;font-size:11px;cursor:pointer;transition:all .2s;}
-.reset-btn:hover{background:var(--bg3);color:var(--text);}
-.rec-count{text-align:center;font-size:11px;color:var(--g3);font-weight:700;padding:2px 0;}
+/* DROPDOWN FILTERS */
+.sb-title{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1.3px;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:4px;}
+.dd-filter{position:relative;margin-bottom:3px;}
+.dd-trigger{display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:7px 10px;cursor:pointer;user-select:none;transition:border-color .2s;gap:6px;}
+.dd-trigger:hover{border-color:var(--g2);}
+.dd-trigger.open{border-color:var(--g2);border-bottom-left-radius:0;border-bottom-right-radius:0;}
+.dd-trigger-left{display:flex;align-items:center;gap:7px;flex:1;min-width:0;}
+.dd-trigger-icon{font-size:13px;flex-shrink:0;}
+.dd-trigger-label{font-size:11px;font-weight:700;color:var(--text);flex:1;}
+.dd-trigger-badge{background:var(--g2);color:#fff;font-size:9px;font-weight:800;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;flex-shrink:0;}
+.dd-trigger-badge.partial{background:var(--yellow);}
+.dd-trigger-badge.none{background:var(--red);}
+.dd-arrow{font-size:9px;color:var(--muted);transition:transform .2s;}
+.dd-trigger.open .dd-arrow{transform:rotate(180deg);}
+.dd-panel{display:none;position:absolute;top:100%;left:0;right:0;z-index:300;background:var(--bg2);border:1px solid var(--g2);border-top:none;border-bottom-left-radius:7px;border-bottom-right-radius:7px;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+.dd-panel.open{display:block;}
+.dd-search{padding:6px 8px;border-bottom:1px solid var(--border);}
+.dd-search input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:5px 8px;font-size:11px;outline:none;}
+.dd-search input:focus{border-color:var(--g2);}
+.dd-actions{display:flex;border-bottom:1px solid var(--border);}
+.dd-act-btn{flex:1;background:transparent;border:none;color:var(--muted);padding:5px 6px;font-size:10px;cursor:pointer;font-weight:600;transition:all .15s;}
+.dd-act-btn:hover{background:var(--bg3);color:var(--text);}
+.dd-act-btn:first-child{border-right:1px solid var(--border);}
+.dd-list{max-height:145px;overflow-y:auto;}
+.dd-item{display:flex;align-items:center;gap:8px;padding:5px 10px;cursor:pointer;transition:background .12s;font-size:11px;}
+.dd-item:hover{background:var(--bg3);}
+.dd-item input{accent-color:var(--g2);cursor:pointer;flex-shrink:0;}
+.dd-item-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dd-item.hidden{display:none;}
 
-/* ── KPI GRID ── */
+/* DATE & RANGE — restored to original clean style */
+.sb-section-label{font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:6px 2px 3px;}
+.date-group{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:8px 10px;}
+.date-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.date-row:last-child{margin-bottom:0;}
+.date-row label{font-size:10px;color:var(--muted);font-weight:700;width:32px;flex-shrink:0;}
+.date-row input{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:11px;padding:4px 7px;outline:none;}
+.date-row input:focus{border-color:var(--g2);}
+.range-group{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:8px 10px;}
+.range-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.range-row:last-child{margin-bottom:0;}
+.range-row label{font-size:10px;color:var(--muted);font-weight:700;width:42px;flex-shrink:0;line-height:1.3;}
+.range-row input{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:11px;padding:4px 7px;outline:none;}
+.range-row input:focus{border-color:var(--g2);}
+
+.apply-btn{width:100%;background:var(--g2);color:#fff;border:none;border-radius:7px;padding:9px;font-size:12px;font-weight:800;cursor:pointer;letter-spacing:.5px;transition:background .2s;margin-top:6px;}
+.apply-btn:hover{background:var(--g1);}
+.reset-btn{width:100%;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:7px;padding:7px;font-size:11px;cursor:pointer;transition:all .2s;margin-top:4px;}
+.reset-btn:hover{background:var(--bg3);color:var(--text);}
+.rec-count{text-align:center;font-size:11px;color:var(--g3);font-weight:700;padding:4px 0;}
+
+/* KPI */
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:18px;}
 .kpi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:15px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
 .kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--kc1),var(--kc2));}
@@ -88,11 +108,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .kpi.purple{--kc1:#a371f7;--kc2:#d2a8ff;}
 .kpi.orange{--kc1:#ffa657;--kc2:#ffcb8a;}
 
-/* ── SECTION ── */
+/* CHARTS */
 .sec-hdr{display:flex;align-items:center;gap:8px;margin:18px 0 12px;font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
 .sec-hdr::before{content:'';width:3px;height:13px;background:var(--g2);border-radius:2px;}
-
-/* ── CHART GRID ── */
 .cg3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px;}
 .cg32{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px;}
 .card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:15px;box-shadow:var(--shadow);}
@@ -100,12 +118,16 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .card-title em{font-style:normal;font-size:10px;color:var(--muted);font-weight:400;}
 .cw{position:relative;height:195px;}
 .cw.tall{height:230px;}
-.cw.sh{height:170px;}
+.insight-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px;}
+.insight{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--shadow);}
+.insight-icon{font-size:20px;margin-bottom:5px;}
+.insight-title{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;}
+.insight-body{font-size:12px;color:var(--text);font-weight:600;line-height:1.5;}
 
-/* ── TABLE ── */
+/* TABLE */
 .tbl-wrap{max-height:270px;overflow-y:auto;}
 table{width:100%;border-collapse:collapse;font-size:11px;}
-th{background:var(--bg3);color:var(--muted);padding:7px 10px;text-align:left;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);position:sticky;top:0;}
+th{background:var(--bg3);color:var(--muted);padding:7px 10px;text-align:left;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:2;}
 td{padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text);}
 tr:last-child td{border:none;}
 tr:hover td{background:var(--bg3);}
@@ -113,25 +135,37 @@ tr:hover td{background:var(--bg3);}
 .bdg-in{background:rgba(63,185,80,.18);color:var(--g4);}
 .bdg-out{background:rgba(248,81,73,.15);color:#ff8080;}
 
-/* ── FOOTER ── */
+/* README TAB */
+.readme-page{padding:24px;max-width:900px;}
+.rm-hero{background:linear-gradient(135deg,rgba(45,164,78,.15),rgba(56,139,253,.08));border:1px solid var(--border);border-radius:12px;padding:24px 28px;margin-bottom:24px;}
+.rm-hero h1{font-size:20px;font-weight:900;color:var(--g2);margin-bottom:6px;}
+.rm-hero p{font-size:13px;color:var(--muted);line-height:1.7;}
+.rm-section{margin-bottom:28px;}
+.rm-section h2{font-size:14px;font-weight:800;color:var(--text);margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid var(--g2);display:flex;align-items:center;gap:8px;}
+.rm-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+.rm-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
+.rm-card h3{font-size:12px;font-weight:800;color:var(--g2);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.rm-card p{font-size:11px;color:var(--muted);line-height:1.6;}
+.rm-card .formula{font-size:10px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:4px 8px;margin-top:6px;color:var(--g3);font-family:monospace;}
+.rm-filters-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.rm-filter-item{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:10px 12px;}
+.rm-filter-item h4{font-size:11px;font-weight:800;color:var(--text);margin-bottom:3px;}
+.rm-filter-item p{font-size:10px;color:var(--muted);line-height:1.5;}
+.rm-chart-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.rm-chart-item{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:10px 12px;}
+.rm-chart-item h4{font-size:11px;font-weight:800;color:var(--text);margin-bottom:3px;}
+.rm-chart-item p{font-size:10px;color:var(--muted);line-height:1.5;}
+.rm-note{background:rgba(210,153,34,.1);border:1px solid rgba(210,153,34,.3);border-radius:8px;padding:12px 16px;font-size:11px;color:var(--yellow);line-height:1.6;margin-top:14px;}
+.rm-note b{color:var(--orange);}
+
 footer{background:var(--bg2);border-top:1px solid var(--border);text-align:center;padding:12px;font-size:10px;color:var(--muted);}
 footer b{color:var(--g2);}
-
-/* ── SCROLLBAR ── */
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;}
 ::-webkit-scrollbar-thumb:hover{background:var(--g2);}
-
-/* ── INSIGHT CARDS ── */
-.insight-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px;}
-.insight{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--shadow);}
-.insight-icon{font-size:20px;margin-bottom:6px;}
-.insight-title{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;}
-.insight-body{font-size:12px;color:var(--text);font-weight:600;line-height:1.5;}
-
-@media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr);}.cg3,.cg32{grid-template-columns:repeat(2,1fr);}.insight-row{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:700px){.sidebar{display:none;}.kpi-grid{grid-template-columns:repeat(2,1fr);}.cg3,.cg32{grid-template-columns:1fr;}.insight-row{grid-template-columns:1fr;}}
+@media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr);}.cg3,.cg32{grid-template-columns:repeat(2,1fr);}.insight-row,.rm-grid,.rm-filters-grid,.rm-chart-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:700px){.sidebar{display:none;}.kpi-grid{grid-template-columns:repeat(2,1fr);}.cg3,.cg32{grid-template-columns:1fr;}.insight-row,.rm-grid,.rm-filters-grid,.rm-chart-grid{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
@@ -139,10 +173,10 @@ footer b{color:var(--g2);}
 <!-- HEADER -->
 <header class="hdr">
   <div class="hdr-left">
-    <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <svg width="42" height="42" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
       <circle cx="50" cy="50" r="47" fill="none" stroke="#1a7f37" stroke-width="3.5"/>
       <path d="M50 8 Q82 22 78 50 Q66 34 50 38 Q34 34 22 50 Q18 22 50 8Z" fill="#2da44e"/>
-      <path d="M50 38 Q34 34 22 50 Q28 70 50 75 Q72 70 78 50 Q66 34 50 38Z" fill="#3fb950" opacity=".4"/>
+      <path d="M50 38 Q34 34 22 50 Q28 70 50 75 Q72 70 78 50 Q66 34 50 38Z" fill="#3fb950" opacity=".35"/>
       <text x="50" y="70" text-anchor="middle" font-size="40" font-family="Arial" font-weight="900" fill="#2da44e">G</text>
     </svg>
     <div class="brand-text">
@@ -151,90 +185,124 @@ footer b{color:var(--g2);}
     </div>
   </div>
   <div class="hdr-right">
-    <span class="tag" id="recTag">76 records · Apr 2025 – Jun 2026</span>
+    <span class="tag" id="recTag">57 records · Apr 2025 – Nov 2026</span>
     <button class="pill" id="themeBtn">🌙 Dark Mode</button>
   </div>
 </header>
 
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('dashboard')">📊 Dashboard</button>
+  <button class="tab-btn" onclick="switchTab('readme')">📖 README — How It Works</button>
+</div>
+
+<!-- DASHBOARD TAB -->
+<div class="tab-page active" id="tab-dashboard">
 <div class="shell">
-<!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sb-title">🎛️ Dashboard Filters</div>
 
-  <div>
-    <div class="sb-label">📅 Date From</div>
-    <input type="date" class="sb-input" id="f_from" value="2025-04-02">
-    <div class="sb-label">📅 Date To</div>
-    <input type="date" class="sb-input" id="f_to" value="2026-11-03">
+  <div class="sb-section-label">📅 Date Range</div>
+  <div class="date-group">
+    <div class="date-row"><label>From</label><input type="date" id="f_from" value="2025-04-02"></div>
+    <div class="date-row"><label>To</label><input type="date" id="f_to" value="2026-11-03"></div>
   </div>
 
-  <div>
-    <div class="sb-label">🌍 Country</div>
-    <div class="msel" id="f_country"></div>
-  </div>
-
-  <div>
-    <div class="sb-label">📦 Category</div>
-    <div class="msel" id="f_category"></div>
-  </div>
-
-  <div>
-    <div class="sb-label">🛒 Product</div>
-    <div class="msel" id="f_product"></div>
-  </div>
-
-  <div>
-    <div class="sb-label">🏭 Warehouse</div>
-    <div class="msel" id="f_warehouse"></div>
-  </div>
-
-  <div>
-    <div class="sb-label">🔄 Transaction Type</div>
-    <div class="msel" id="f_txntype">
-      <label><input type="checkbox" value="IN" checked> 📥 Stock IN</label>
-      <label><input type="checkbox" value="OUT" checked> 📤 Stock OUT</label>
+  <div class="dd-filter" id="dd_country">
+    <div class="dd-trigger" onclick="toggleDD('country')">
+      <div class="dd-trigger-left"><span class="dd-trigger-icon">🌍</span><span class="dd-trigger-label">Country</span></div>
+      <span class="dd-trigger-badge" id="badge_country">2</span><span class="dd-arrow">▼</span>
+    </div>
+    <div class="dd-panel" id="panel_country">
+      <div class="dd-search"><input type="text" placeholder="Search…" oninput="searchDD('country',this.value)"></div>
+      <div class="dd-actions"><button class="dd-act-btn" onclick="selectAll('country')">All</button><button class="dd-act-btn" onclick="clearAll('country')">None</button></div>
+      <div class="dd-list" id="list_country"></div>
     </div>
   </div>
 
-  <div>
-    <div class="sb-label">💰 Total Value Range (₱)</div>
-    <div class="range-pair">
-      <input type="number" class="sb-input" id="f_vmin" placeholder="Min">
-      <span>–</span>
-      <input type="number" class="sb-input" id="f_vmax" placeholder="Max">
+  <div class="dd-filter" id="dd_category">
+    <div class="dd-trigger" onclick="toggleDD('category')">
+      <div class="dd-trigger-left"><span class="dd-trigger-icon">📦</span><span class="dd-trigger-label">Category</span></div>
+      <span class="dd-trigger-badge" id="badge_category">5</span><span class="dd-arrow">▼</span>
+    </div>
+    <div class="dd-panel" id="panel_category">
+      <div class="dd-search"><input type="text" placeholder="Search…" oninput="searchDD('category',this.value)"></div>
+      <div class="dd-actions"><button class="dd-act-btn" onclick="selectAll('category')">All</button><button class="dd-act-btn" onclick="clearAll('category')">None</button></div>
+      <div class="dd-list" id="list_category"></div>
     </div>
   </div>
 
-  <div>
-    <div class="sb-label">🏷️ Unit Price Range (₱)</div>
-    <div class="range-pair">
-      <input type="number" class="sb-input" id="f_umin" placeholder="Min">
-      <span>–</span>
-      <input type="number" class="sb-input" id="f_umax" placeholder="Max">
+  <div class="dd-filter" id="dd_product">
+    <div class="dd-trigger" onclick="toggleDD('product')">
+      <div class="dd-trigger-left"><span class="dd-trigger-icon">🛒</span><span class="dd-trigger-label">Product</span></div>
+      <span class="dd-trigger-badge" id="badge_product">17</span><span class="dd-arrow">▼</span>
     </div>
+    <div class="dd-panel" id="panel_product">
+      <div class="dd-search"><input type="text" placeholder="Search…" oninput="searchDD('product',this.value)"></div>
+      <div class="dd-actions"><button class="dd-act-btn" onclick="selectAll('product')">All</button><button class="dd-act-btn" onclick="clearAll('product')">None</button></div>
+      <div class="dd-list" id="list_product"></div>
+    </div>
+  </div>
+
+  <div class="dd-filter" id="dd_agent">
+    <div class="dd-trigger" onclick="toggleDD('agent')">
+      <div class="dd-trigger-left"><span class="dd-trigger-icon">🧑‍💼</span><span class="dd-trigger-label">Agent</span></div>
+      <span class="dd-trigger-badge" id="badge_agent">–</span><span class="dd-arrow">▼</span>
+    </div>
+    <div class="dd-panel" id="panel_agent">
+      <div class="dd-search"><input type="text" placeholder="Search…" oninput="searchDD('agent',this.value)"></div>
+      <div class="dd-actions"><button class="dd-act-btn" onclick="selectAll('agent')">All</button><button class="dd-act-btn" onclick="clearAll('agent')">None</button></div>
+      <div class="dd-list" id="list_agent"></div>
+    </div>
+  </div>
+
+  <div class="dd-filter" id="dd_warehouse">
+    <div class="dd-trigger" onclick="toggleDD('warehouse')">
+      <div class="dd-trigger-left"><span class="dd-trigger-icon">🏭</span><span class="dd-trigger-label">Warehouse</span></div>
+      <span class="dd-trigger-badge" id="badge_warehouse">2</span><span class="dd-arrow">▼</span>
+    </div>
+    <div class="dd-panel" id="panel_warehouse">
+      <div class="dd-actions"><button class="dd-act-btn" onclick="selectAll('warehouse')">All</button><button class="dd-act-btn" onclick="clearAll('warehouse')">None</button></div>
+      <div class="dd-list" id="list_warehouse"></div>
+    </div>
+  </div>
+
+  <div class="dd-filter" id="dd_txntype">
+    <div class="dd-trigger" onclick="toggleDD('txntype')">
+      <div class="dd-trigger-left"><span class="dd-trigger-icon">🔄</span><span class="dd-trigger-label">Transaction Type</span></div>
+      <span class="dd-trigger-badge" id="badge_txntype">2</span><span class="dd-arrow">▼</span>
+    </div>
+    <div class="dd-panel" id="panel_txntype">
+      <div class="dd-actions"><button class="dd-act-btn" onclick="selectAll('txntype')">All</button><button class="dd-act-btn" onclick="clearAll('txntype')">None</button></div>
+      <div class="dd-list" id="list_txntype"></div>
+    </div>
+  </div>
+
+  <div class="sb-section-label">💰 Value & Price Range</div>
+  <div class="range-group">
+    <div class="range-row"><label>Total Value ≥</label><input type="number" id="f_vmin" placeholder="Min ₱"></div>
+    <div class="range-row"><label>Total Value ≤</label><input type="number" id="f_vmax" placeholder="Max ₱"></div>
+    <div class="range-row"><label>Unit Price ≥</label><input type="number" id="f_umin" placeholder="Min ₱"></div>
+    <div class="range-row"><label>Unit Price ≤</label><input type="number" id="f_umax" placeholder="Max ₱"></div>
   </div>
 
   <button class="apply-btn" id="applyBtn">✅ Apply Filters</button>
   <button class="reset-btn" id="resetBtn">↺ Reset All</button>
-  <div class="rec-count" id="recCount">Showing 76 records</div>
+  <div class="rec-count" id="recCount">Showing 57 records</div>
 </aside>
 
-<!-- MAIN -->
 <main class="main">
-
-  <!-- KPIs -->
   <div class="kpi-grid">
-    <div class="kpi green"><div class="kpi-lbl">Total Procurement (IN)</div><div class="kpi-val" id="k_in">₱9.98M</div><div class="kpi-sub">Stock purchased / received</div></div>
-    <div class="kpi red"><div class="kpi-lbl">Total Sales (OUT)</div><div class="kpi-val" id="k_out">₱5.63M</div><div class="kpi-sub">Stock dispatched / sold</div></div>
-    <div class="kpi blue"><div class="kpi-lbl">Net Stock Value</div><div class="kpi-val" id="k_net">₱4.35M</div><div class="kpi-sub">IN minus OUT</div></div>
-    <div class="kpi yellow"><div class="kpi-lbl">Total Transactions</div><div class="kpi-val" id="k_txn">76</div><div class="kpi-sub">Records in view</div></div>
-    <div class="kpi purple"><div class="kpi-lbl">Unique Clients</div><div class="kpi-val" id="k_clients">26</div><div class="kpi-sub">Active partners</div></div>
-    <div class="kpi orange"><div class="kpi-lbl">Avg Unit Price</div><div class="kpi-val" id="k_avgprice">₱5,285</div><div class="kpi-sub">Across all transactions</div></div>
-    <div class="kpi green"><div class="kpi-lbl">Top Category</div><div class="kpi-val" id="k_topcat" style="font-size:17px">Cashew</div><div class="kpi-sub">By total value</div></div>
-    <div class="kpi blue"><div class="kpi-lbl">Running Stock</div><div class="kpi-val" id="k_stock">–</div><div class="kpi-sub">Latest balance</div></div>
+    <div class="kpi green"><div class="kpi-lbl">Total Procurement (IN)</div><div class="kpi-val" id="k_in">–</div><div class="kpi-sub">Total stock purchased / received</div></div>
+    <div class="kpi red"><div class="kpi-lbl">Total Sales (OUT)</div><div class="kpi-val" id="k_out">–</div><div class="kpi-sub">Total stock dispatched / sold</div></div>
+    <div class="kpi blue"><div class="kpi-lbl">Net Stock Value</div><div class="kpi-val" id="k_net">–</div><div class="kpi-sub">IN value minus OUT value</div></div>
+    <div class="kpi yellow"><div class="kpi-lbl">Total Transactions</div><div class="kpi-val" id="k_txn">–</div><div class="kpi-sub">Records in filtered view</div></div>
+    <div class="kpi purple"><div class="kpi-lbl">Unique Clients</div><div class="kpi-val" id="k_clients">–</div><div class="kpi-sub">Active buying partners</div></div>
+    <div class="kpi orange"><div class="kpi-lbl">Avg Unit Price</div><div class="kpi-val" id="k_avgprice">–</div><div class="kpi-sub">Average across all records</div></div>
+    <div class="kpi green"><div class="kpi-lbl">Top Category</div><div class="kpi-val" id="k_topcat" style="font-size:17px">–</div><div class="kpi-sub">By total transaction value</div></div>
+    <div class="kpi blue"><div class="kpi-lbl">Sell-Through Rate</div><div class="kpi-val" id="k_sellthrough">–</div><div class="kpi-sub">OUT ÷ IN value</div></div>
   </div>
 
-  <!-- INSIGHTS -->
   <div class="sec-hdr">💡 Key Business Insights</div>
   <div class="insight-row">
     <div class="insight"><div class="insight-icon">🥇</div><div class="insight-title">Top Revenue Client</div><div class="insight-body" id="ins_topclient">–</div></div>
@@ -242,109 +310,181 @@ footer b{color:var(--g2);}
     <div class="insight"><div class="insight-icon">📊</div><div class="insight-title">Stock Health</div><div class="insight-body" id="ins_health">–</div></div>
   </div>
 
-  <!-- SECTION 1: Time Trends -->
   <div class="sec-hdr">📈 Transaction & Revenue Trends</div>
   <div class="cg32">
-    <div class="card">
-      <div class="card-title">Monthly Stock Value — IN vs OUT <em>₱ by month</em></div>
-      <div class="cw tall"><canvas id="c_monthly"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">IN vs OUT Split <em>total ₱ value</em></div>
-      <div class="cw tall"><canvas id="c_inout_donut"></canvas></div>
-    </div>
+    <div class="card"><div class="card-title">Monthly Stock Value — IN vs OUT <em>₱ by month</em></div><div class="cw tall"><canvas id="c_monthly"></canvas></div></div>
+    <div class="card"><div class="card-title">IN vs OUT Split <em>total ₱ value</em></div><div class="cw tall"><canvas id="c_inout_donut"></canvas></div></div>
   </div>
   <div class="cg3">
-    <div class="card">
-      <div class="card-title">Cumulative Stock Value <em>running total ₱</em></div>
-      <div class="cw"><canvas id="c_cumulative"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Transaction Count by Month <em>no. of entries</em></div>
-      <div class="cw"><canvas id="c_txn_month"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Running Stock Level <em>units over time</em></div>
-      <div class="cw"><canvas id="c_running_stock"></canvas></div>
-    </div>
+    <div class="card"><div class="card-title">Cumulative Stock Value <em>running ₱ total</em></div><div class="cw"><canvas id="c_cumulative"></canvas></div></div>
+    <div class="card"><div class="card-title">Transaction Count by Month <em>no. of entries</em></div><div class="cw"><canvas id="c_txn_month"></canvas></div></div>
+    <div class="card"><div class="card-title">Running Stock Level <em>units over time</em></div><div class="cw"><canvas id="c_running_stock"></canvas></div></div>
   </div>
 
-  <!-- SECTION 2: Category -->
   <div class="sec-hdr">🗂️ Category Intelligence</div>
   <div class="cg3">
-    <div class="card">
-      <div class="card-title">Revenue by Category <em>₱ IN + OUT</em></div>
-      <div class="cw"><canvas id="c_cat_bar"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Category Share <em>% of total value</em></div>
-      <div class="cw"><canvas id="c_cat_pie"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">IN vs OUT by Category <em>grouped bar</em></div>
-      <div class="cw"><canvas id="c_cat_inout"></canvas></div>
-    </div>
+    <div class="card"><div class="card-title">Revenue by Category <em>₱ total</em></div><div class="cw"><canvas id="c_cat_bar"></canvas></div></div>
+    <div class="card"><div class="card-title">Category Share <em>% of total value</em></div><div class="cw"><canvas id="c_cat_pie"></canvas></div></div>
+    <div class="card"><div class="card-title">IN vs OUT by Category <em>grouped comparison</em></div><div class="cw"><canvas id="c_cat_inout"></canvas></div></div>
   </div>
 
-  <!-- SECTION 3: Client & Product -->
   <div class="sec-hdr">🧑‍🤝‍🧑 Client & Product Performance</div>
   <div class="cg3">
-    <div class="card">
-      <div class="card-title">Top Clients by OUT Value <em>sales ₱</em></div>
-      <div class="cw"><canvas id="c_client"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Top Products by Value <em>₱ total</em></div>
-      <div class="cw"><canvas id="c_product"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Transaction Count by Client <em>no. of orders</em></div>
-      <div class="cw"><canvas id="c_client_count"></canvas></div>
-    </div>
+    <div class="card"><div class="card-title">Top Clients by Sales Value <em>OUT ₱</em></div><div class="cw"><canvas id="c_client"></canvas></div></div>
+    <div class="card"><div class="card-title">Top Products by Value <em>₱ total</em></div><div class="cw"><canvas id="c_product"></canvas></div></div>
+    <div class="card"><div class="card-title">Transaction Count by Client <em>no. of orders</em></div><div class="cw"><canvas id="c_client_count"></canvas></div></div>
   </div>
 
-  <!-- SECTION 4: Geographic & Warehouse -->
   <div class="sec-hdr">🌍 Geographic & Operational View</div>
   <div class="cg3">
-    <div class="card">
-      <div class="card-title">Value by Country <em>₱ split</em></div>
-      <div class="cw"><canvas id="c_country"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Warehouse Distribution <em>by transaction count</em></div>
-      <div class="cw"><canvas id="c_warehouse"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Unit Price Distribution <em>price buckets</em></div>
-      <div class="cw"><canvas id="c_price_hist"></canvas></div>
-    </div>
+    <div class="card"><div class="card-title">Value by Country <em>₱ split</em></div><div class="cw"><canvas id="c_country"></canvas></div></div>
+    <div class="card"><div class="card-title">Warehouse Distribution <em>by count</em></div><div class="cw"><canvas id="c_warehouse"></canvas></div></div>
+    <div class="card"><div class="card-title">Unit Price Distribution <em>price buckets</em></div><div class="cw"><canvas id="c_price_hist"></canvas></div></div>
   </div>
 
-  <!-- TABLE -->
   <div class="sec-hdr">📋 Transaction Ledger</div>
   <div class="card">
     <div class="tbl-wrap">
       <table>
-        <thead><tr>
-          <th>Date</th><th>Txn ID</th><th>Product</th><th>Category</th>
-          <th>Country</th><th>Type</th><th>Qty</th>
-          <th>Unit ₱</th><th>Total ₱</th><th>Client / Supplier</th><th>Warehouse</th><th>Remarks</th>
-        </tr></thead>
+        <thead><tr><th>Date</th><th>Txn ID</th><th>Product</th><th>Category</th><th>Country</th><th>Type</th><th>Qty</th><th>Unit ₱</th><th>Total ₱</th><th>Client / Supplier</th><th>Agent</th><th>Warehouse</th><th>Remarks</th></tr></thead>
         <tbody id="tblBody"></tbody>
       </table>
     </div>
   </div>
-
 </main>
+</div>
+</div>
+
+<!-- README TAB -->
+<div class="tab-page" id="tab-readme">
+<div class="readme-page">
+
+  <div class="rm-hero">
+    <h1>📖 GreenFarm INTL — Dashboard Documentation</h1>
+    <p>This dashboard visualizes inventory and transaction data from the GreenFarm INTL Inventory Master Ledger. It covers <strong>57 valid transactions</strong> from <strong>April 2025 to November 2026</strong> across two countries (Malaysia & Philippines), five product categories, and 26+ clients. All data is parsed directly from the Excel workbook — zero-value placeholder rows are automatically excluded.</p>
+  </div>
+
+  <!-- DATA NOTES -->
+  <div class="rm-section">
+    <h2>⚠️ Data Notes & Cleaning Logic</h2>
+    <div class="rm-grid">
+      <div class="rm-card">
+        <h3>🗑️ Excluded Rows</h3>
+        <p>19 rows were excluded from analysis because they had a <strong>Total Value of ₱0</strong>. These are template/placeholder rows for future stock entries (e.g., WS1, WS2, WW320, SP, JACKFRUIT, Coffee capsules) with no confirmed transaction value yet.</p>
+        <div class="formula">Filter: Total Value (₱) > 0</div>
+      </div>
+      <div class="rm-card">
+        <h3>📅 Date Interpretation</h3>
+        <p>Some date cells in Excel were stored as actual date serial values (e.g., Jun 3, Jul 3, Nov 3 2026) while others were text strings in DD/MM/YYYY format. Both formats are handled correctly. The Nov 3 2026 record is a <strong>real forward-dated transaction</strong> for KIM ENRIQUEZ (₱199,000).</p>
+        <div class="formula">Parsed: DD/MM/YYYY strings + Excel datetime serials</div>
+      </div>
+      <div class="rm-card">
+        <h3>🏷️ Transaction Types</h3>
+        <p><strong>Stock IN</strong> = procurement / goods received from suppliers (increases inventory). <strong>Stock OUT</strong> = sales / dispatches to clients (decreases inventory). Only rows with a defined IN or OUT type are included.</p>
+        <div class="formula">Valid types: "IN" | "OUT" only</div>
+      </div>
+      <div class="rm-card">
+        <h3>💱 Currency</h3>
+        <p>All monetary values are in <strong>Philippine Peso (₱)</strong>. Values ≥ ₱1,000,000 are displayed as M (millions), ≥ ₱1,000 as K (thousands), for readability in KPIs and chart axes.</p>
+        <div class="formula">Display: ₱9.98M = ₱9,976,000</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="rm-section">
+    <h2>📌 KPI Definitions</h2>
+    <div class="rm-grid">
+      <div class="rm-card">
+        <h3>🟢 Total Procurement (IN)</h3>
+        <p>Sum of <strong>Total Value (₱)</strong> for all Stock IN transactions in the filtered view. Represents total goods purchased or received into inventory.</p>
+        <div class="formula">SUM(Total Value) WHERE TxnType = "IN"</div>
+      </div>
+      <div class="rm-card">
+        <h3>🔴 Total Sales (OUT)</h3>
+        <p>Sum of <strong>Total Value (₱)</strong> for all Stock OUT transactions. Represents the total value of goods sold or dispatched to clients.</p>
+        <div class="formula">SUM(Total Value) WHERE TxnType = "OUT"</div>
+      </div>
+      <div class="rm-card">
+        <h3>🔵 Net Stock Value</h3>
+        <p>The difference between total IN and total OUT value. A positive number means more value came in than went out — indicating healthy procurement vs. sales balance. Displayed in green if positive, red if negative.</p>
+        <div class="formula">SUM(IN Value) − SUM(OUT Value)</div>
+      </div>
+      <div class="rm-card">
+        <h3>🟡 Total Transactions</h3>
+        <p>Count of all ledger rows in the current filtered view. Each row represents one stock movement event (one IN or OUT entry).</p>
+        <div class="formula">COUNT(Rows) in filtered dataset</div>
+      </div>
+      <div class="rm-card">
+        <h3>🟣 Unique Clients</h3>
+        <p>Count of distinct client/supplier names in OUT transactions only. Represents the active customer base generating sales revenue.</p>
+        <div class="formula">DISTINCT COUNT(Client) WHERE TxnType = "OUT"</div>
+      </div>
+      <div class="rm-card">
+        <h3>🟠 Avg Unit Price</h3>
+        <p>Average unit price across all filtered transactions (both IN and OUT). Helps monitor pricing trends — a rising average may signal inflation in sourcing costs or premium product mix shift.</p>
+        <div class="formula">AVG(Unit Price ₱) across all filtered rows</div>
+      </div>
+      <div class="rm-card">
+        <h3>🟢 Top Category</h3>
+        <p>The product category with the highest combined total value (IN + OUT) in the current filter view. Identifies the primary revenue/procurement driver.</p>
+        <div class="formula">MAX(SUM(Total Value)) GROUP BY Category</div>
+      </div>
+      <div class="rm-card">
+        <h3>🔵 Sell-Through Rate</h3>
+        <p>What percentage of the procured inventory value has been sold. A rate of 56% means ₱56 of every ₱100 purchased has been dispatched to clients. Target: 70–90% for healthy turnover.</p>
+        <div class="formula">SUM(OUT Value) ÷ SUM(IN Value) × 100</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="rm-section">
+    <h2>📈 Chart Explanations</h2>
+    <div class="rm-chart-grid">
+      <div class="rm-chart-item"><h4>Monthly IN vs OUT Bar</h4><p>Grouped bar chart comparing total Stock IN value (green) vs Stock OUT value (red) per calendar month. Gaps between months indicate no transactions that month.</p></div>
+      <div class="rm-chart-item"><h4>IN vs OUT Donut</h4><p>High-level split of total procurement value vs total sales value as a percentage doughnut. Quick visual for overall inventory direction.</p></div>
+      <div class="rm-chart-item"><h4>Cumulative Stock Value</h4><p>Running total lines for IN and OUT over time. The gap between the two lines at any point = net retained stock value. Widening gap = more being bought than sold.</p></div>
+      <div class="rm-chart-item"><h4>Transaction Count by Month</h4><p>How many individual ledger entries occurred per month — independent of value. High count months indicate busy operational periods.</p></div>
+      <div class="rm-chart-item"><h4>Running Stock Level</h4><p>The "Running Stock" column from the ledger plotted over time. Shows the unit balance trajectory. Upward slope = net accumulation; downward = net depletion.</p></div>
+      <div class="rm-chart-item"><h4>Revenue by Category</h4><p>Horizontal bar showing total value (IN + OUT combined) per category. Cashew dominates due to high unit prices (₱7,900–₱8,620/box).</p></div>
+      <div class="rm-chart-item"><h4>Category Share Pie</h4><p>Percentage contribution of each category to total value. Useful for portfolio concentration risk — if one category is >80%, the business is highly dependent on it.</p></div>
+      <div class="rm-chart-item"><h4>IN vs OUT by Category</h4><p>Grouped bar per category showing procurement vs sales split. A tall IN bar with low OUT means stock is being held (Cashew). High OUT vs IN means that category is being run down.</p></div>
+      <div class="rm-chart-item"><h4>Top Clients by Sales</h4><p>Top 8 clients ranked by total OUT value they've purchased. DANNY and RYAN are the top two revenue clients by a significant margin.</p></div>
+      <div class="rm-chart-item"><h4>Top Products by Value</h4><p>Products ranked by combined transaction value. WS1 (Premium Cashew W-S1) leads due to its high unit price and large shipment volumes.</p></div>
+      <div class="rm-chart-item"><h4>Transaction Count by Client</h4><p>How frequently each client appears in OUT records. High frequency + lower value = regular small buyers. Low frequency + high value = bulk/wholesale buyers.</p></div>
+      <div class="rm-chart-item"><h4>Value by Country</h4><p>Doughnut showing the ₱ split between Malaysia and Philippines. Malaysia holds the large cashew procurement (IN), Philippines is where most client sales (OUT) occur.</p></div>
+      <div class="rm-chart-item"><h4>Warehouse Distribution</h4><p>Transaction count split between Main Warehouse and Cold Storage. Cold Storage is used for perishable items (Mango, Veggies); Main Warehouse for Cashew, Coffee.</p></div>
+      <div class="rm-chart-item"><h4>Unit Price Distribution</h4><p>Histogram bucketing unit prices into 6 ranges. Shows the pricing spread — whether the product mix is concentrated in low, mid, or high price points.</p></div>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="rm-section">
+    <h2>🎛️ Filter Reference</h2>
+    <div class="rm-filters-grid">
+      <div class="rm-filter-item"><h4>📅 Date Range</h4><p>Filters all charts and KPIs to show only transactions between the selected From and To dates. Defaults to full data range (Apr 2, 2025 – Nov 3, 2026).</p></div>
+      <div class="rm-filter-item"><h4>🌍 Country</h4><p>Multi-select dropdown. Malaysia = primary procurement hub (Cashew IN). Philippines = primary sales market (client OUT transactions).</p></div>
+      <div class="rm-filter-item"><h4>📦 Category</h4><p>Filter by product category: Cashew, Mango, Coffee, Veggies, Jackfruit. Deselecting a category removes all its rows from every KPI and chart.</p></div>
+      <div class="rm-filter-item"><h4>🛒 Product</h4><p>Granular filter by individual product SKU (e.g., WS1, MANGO-1KG, COFFEE-12). Useful for single-product deep dives.</p></div>
+      <div class="rm-filter-item"><h4>🧑‍💼 Agent</h4><p>Filter by the sales/operations agent who logged the transaction. Currently Florence handles Malaysia-based entries; Philippines entries have no assigned agent.</p></div>
+      <div class="rm-filter-item"><h4>🏭 Warehouse</h4><p>Main Warehouse (ambient storage, Cashew/Coffee) vs Cold Storage (perishables: Mango, Veggies). Affects which stock movements appear.</p></div>
+      <div class="rm-filter-item"><h4>🔄 Transaction Type</h4><p>Show only IN (procurement), only OUT (sales), or both. Useful for reviewing just the buying side or selling side independently.</p></div>
+      <div class="rm-filter-item"><h4>💰 Total Value Range</h4><p>Min/Max filter on the Total Value (₱) of each row. Use to isolate large bulk orders (e.g., > ₱500,000) or small spot sales.</p></div>
+      <div class="rm-filter-item"><h4>🏷️ Unit Price Range</h4><p>Min/Max filter on Unit Price per box/unit. Useful for comparing premium vs standard grade products within a category.</p></div>
+    </div>
+    <div class="rm-note"><b>⚠️ Important:</b> All filters are connected — changing any filter updates ALL KPIs, ALL charts, and the transaction table simultaneously. Click <b>✅ Apply Filters</b> to confirm changes. Use <b>↺ Reset All</b> to return to the full unfiltered dataset. The badge number on each dropdown shows how many options are currently selected.</div>
+  </div>
+
+</div>
 </div>
 
 <footer>GreenFarm INTL Import and Export Corporation &nbsp;·&nbsp; Operations Intelligence Dashboard &nbsp;·&nbsp; Developed by <b>Jawad Afzaal</b></footer>
 
 <script>
-// ── REAL DATA ──────────────────────────────────────────────────────────────
-const RAW_DATA = [{"date": "2025-04-02", "country": "Malaysia", "txnId": "TXN-001", "product": "WS1", "category": "Cashew", "unitType": "Box", "txnType": "IN", "qtyIn": 500.0, "qtyOut": 0.0, "runningStock": 500.0, "client": "Main Supplier", "agent": "Florence", "refOrder": "PO-2025-001", "unitPrice": 8620.0, "totalValue": 4310000.0, "warehouse": "Main Warehouse", "condition": "Good", "remarks": "First shipment", "loggedBy": "Jawad"}, {"date": "2025-04-03", "country": "Malaysia", "txnId": "TXN-002", "product": "WS2", "category": "Cashew", "unitType": "Box", "txnType": "IN", "qtyIn": 300.0, "qtyOut": 0.0, "runningStock": 800.0, "client": "Main Supplier", "agent": "Florence", "refOrder": "PO-2025-002", "unitPrice": 7900.0, "totalValue": 2370000.0, "warehouse": "Main Warehouse", "condition": "Good", "remarks": "", "loggedBy": "Jawad"}, {"date": "2025-04-03", "country": "Malaysia", "txnId": "TXN-003", "product": "WS1", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 3.0, "runningStock": 797.0, "client": "JOSEFINA", "agent": "Florence", "refOrder": "ORD-001", "unitPrice": 8620.0, "totalValue": 25860.0, "warehouse": "Main Warehouse", "condition": "Good", "remarks": "Confirmed W/VN", "loggedBy": "Jawad"}, {"date": "2025-04-08", "country": "Malaysia", "txnId": "TXN-004", "product": "WS2", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 22.0, "runningStock": 775.0, "client": "JOSEFINA", "agent": "Florence", "refOrder": "ORD-002", "unitPrice": 7900.0, "totalValue": 173800.0, "warehouse": "Main Warehouse", "condition": "Good", "remarks": "", "loggedBy": "Jawad"}, {"date": "2025-04-08", "country": "Malaysia", "txnId": "TXN-005", "product": "VEGGIES", "category": "Veggies", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 2.0, "runningStock": 773.0, "client": "FELLY", "agent": "Florence", "refOrder": "ORD-003", "unitPrice": 4050.0, "totalValue": 8100.0, "warehouse": "Cold Storage", "condition": "Good", "remarks": "Free delivery", "loggedBy": "Jawad"}, {"date": "2025-04-13", "country": "Malaysia", "txnId": "TXN-006", "product": "WS1", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 2.0, "runningStock": 771.0, "client": "CHARLES", "agent": "Florence", "refOrder": "ORD-004", "unitPrice": 8620.0, "totalValue": 17240.0, "warehouse": "Main Warehouse", "condition": "Good", "remarks": "Confirmed W/VN", "loggedBy": "Jawad"}, {"date": "2025-05-01", "country": "Malaysia", "txnId": "TXN-007", "product": "WW320", "category": "Cashew", "unitType": "Box", "txnType": "IN", "qtyIn": 200.0, "qtyOut": 0.0, "runningStock": 971.0, "client": "Main Supplier", "agent": "Florence", "refOrder": "PO-2025-003", "unitPrice": 9200.0, "totalValue": 1840000.0, "warehouse": "Main Warehouse", "condition": "Good", "remarks": "", "loggedBy": "Jawad"}, {"date": "2025-05-05", "country": "Malaysia", "txnId": "TXN-008", "product": "MANGO-1KG", "category": "Mango", "unitType": "Box", "txnType": "IN", "qtyIn": 400.0, "qtyOut": 0.0, "runningStock": 1371.0, "client": "Main Supplier", "agent": "Florence", "refOrder": "PO-2025-004", "unitPrice": 3500.0, "totalValue": 1400000.0, "warehouse": "Cold Storage", "condition": "Good", "remarks": "Original 1kg", "loggedBy": "Jawad"}, {"date": "2025-05-10", "country": "Malaysia", "txnId": "TXN-009", "product": "COFFEE-12", "category": "Coffee", "unitType": "Pack", "txnType": "IN", "qtyIn": 20.0, "qtyOut": 0.0, "runningStock": 1391.0, "client": "Main Supplier", "agent": "Florence", "refOrder": "PO-2025-005", "unitPrice": 2800.0, "totalValue": 56000.0, "warehouse": "Main Warehouse", "condition": "Good", "remarks": "12 caps per pack", "loggedBy": "Jawad"}, {"date": "2025-05-15", "country": "Malaysia", "txnId": "TXN-010", "product": "SP", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 1390.0, "client": "TERESSA", "agent": "Florence", "refOrder": "ORD-005", "unitPrice": 10500.0, "totalValue": 10500.0, "warehouse": "Main Warehouse", "condition": "Good", "remarks": "", "loggedBy": "Jawad"}, {"date": "2026-08-03", "country": "Philippines", "txnId": "", "product": "WS1", "category": "Cashew", "unitType": "Box", "txnType": "IN", "qtyIn": 700.0, "qtyOut": 0.0, "runningStock": 2090.0, "client": "Main Supplier", "agent": "", "refOrder": "", "unitPrice": 0.0, "totalValue": 0.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-16", "country": "Philippines", "txnId": "", "product": "WS1", "category": "Cashew", "unitType": "Box", "txnType": "IN", "qtyIn": 700.0, "qtyOut": 0.0, "runningStock": 2790.0, "client": "Main Supplier", "agent": "", "refOrder": "", "unitPrice": 0.0, "totalValue": 0.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-27", "country": "Philippines", "txnId": "", "product": "WS1", "category": "Cashew", "unitType": "Box", "txnType": "IN", "qtyIn": 750.0, "qtyOut": 0.0, "runningStock": 3540.0, "client": "Main Supplier", "agent": "", "refOrder": "", "unitPrice": 0.0, "totalValue": 0.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-08-03", "country": "Philippines", "txnId": "", "product": "WS2", "category": "Cashew", "unitType": "Box", "txnType": "IN", "qtyIn": 500.0, "qtyOut": 0.0, "runningStock": 4040.0, "client": "Main Supplier", "agent": "", "refOrder": "", "unitPrice": 0.0, "totalValue": 0.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-16", "country": "Philippines", "txnId": "", "product": "WS2", "category": "Cashew", "unitType": "Box", "txnType": "IN", "qtyIn": 500.0, "qtyOut": 0.0, "runningStock": 4540.0, "client": "Main Supplier", "agent": "", "refOrder": "", "unitPrice": 0.0, "totalValue": 0.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-27", "country": "Philippines", "txnId": "", "product": "WS2", "category": "Cashew", "unitType": "Box", "txnType": "IN", "qtyIn": 500.0, "qtyOut": 0.0, "runningStock": 5040.0, "client": "Main Supplier", "agent": "", "refOrder": "", "unitPrice": 0.0, "totalValue": 0.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-08-03", "country": "Philippines", "txnId": "", "product": "WW320", "category": "Cashew", "unitType": "Box", "txnType": "IN", "qtyIn": 100.0, "qtyOut": 0.0, "runningStock": 5140.0, "client": "Main Supplier", "agent": "", "refOrder": "", "unitPrice": 0.0, "totalValue": 0.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-16", "country": "Philippines", "txnId": "", "product": "WW320", "category": "Cashew", "unitType": "Box", "txnType": "IN", "qtyIn": 50.0, "qtyOut": 0.0, "runningStock": 5190.0, "client": "Main Supplier", "agent": "", "refOrder": "", "unitPrice": 0.0, "totalValue": 0.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-27", "country": "Philippines", "txnId": "", "product": "WW320", "category": "Cashew", "unitType": "Box", "txnType": "IN", "qtyIn": 50.0, "qtyOut": 0.0, "runningStock": 5240.0, "client": "Main Supplier", "agent": "", "refOrder": "", "unitPrice": 0.0, "totalValue": 0.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-08-03", "country": "Philippines", "txnId": "", "product": "SP", "category": "Cashew", "unitType": "Box", "txnType": "IN", "qtyIn": 50.0, "qtyOut": 0.0, "runningStock": 5290.0, "client": "", "agent": "", "refOrder": "", "unitPrice": 0.0, "totalValue": 0.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-27", "country": "Philippines", "txnId": "", "product": "SP", "category": "Cashew", "unitType": "Box", "txnType": "IN", "qtyIn": 50.0, "qtyOut": 0.0, "runningStock": 5340.0, "client": "", "agent": "", "refOrder": "", "unitPrice": 0.0, "totalValue": 0.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-16", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "IN", "qtyIn": 256.0, "qtyOut": 0.0, "runningStock": 5596.0, "client": "imex", "agent": "", "refOrder": "", "unitPrice": 0.0, "totalValue": 0.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-16", "country": "Philippines", "txnId": "", "product": "MANGOESorig500g", "category": "Mango", "unitType": "Box", "txnType": "IN", "qtyIn": 296.0, "qtyOut": 0.0, "runningStock": 5892.0, "client": "imex", "agent": "", "refOrder": "", "unitPrice": 0.0, "totalValue": 0.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-16", "country": "Philippines", "txnId": "", "product": "MANGOESchilli5kg", "category": "Mango", "unitType": "Box", "txnType": "IN", "qtyIn": 10.0, "qtyOut": 0.0, "runningStock": 5902.0, "client": "imex", "agent": "", "refOrder": "", "unitPrice": 0.0, "totalValue": 0.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-16", "country": "Philippines", "txnId": "", "product": "MANGOESchilli500g", "category": "Mango", "unitType": "Box", "txnType": "IN", "qtyIn": 3.0, "qtyOut": 0.0, "runningStock": 5905.0, "client": "imex", "agent": "", "refOrder": "", "unitPrice": 0.0, "totalValue": 0.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-16", "country": "Philippines", "txnId": "", "product": "JACKFRUIT", "category": "Jackfruit", "unitType": "Box", "txnType": "IN", "qtyIn": 35.0, "qtyOut": 0.0, "runningStock": 5940.0, "client": "", "agent": "", "refOrder": "", "unitPrice": 0.0, "totalValue": 0.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-16", "country": "Philippines", "txnId": "", "product": "COFFEE12caps", "category": "Coffee", "unitType": "Box", "txnType": "IN", "qtyIn": 20.0, "qtyOut": 0.0, "runningStock": 5960.0, "client": "", "agent": "", "refOrder": "", "unitPrice": 0.0, "totalValue": 0.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-16", "country": "Philippines", "txnId": "", "product": "COFFEE6caps", "category": "Coffee", "unitType": "Box", "txnType": "IN", "qtyIn": 30.0, "qtyOut": 0.0, "runningStock": 5990.0, "client": "", "agent": "", "refOrder": "", "unitPrice": 0.0, "totalValue": 0.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-23", "country": "Philippines", "txnId": "", "product": "MANGOESorig5kg", "category": "Mango", "unitType": "Box", "txnType": "IN", "qtyIn": 300.0, "qtyOut": 0.0, "runningStock": 6290.0, "client": "imex", "agent": "", "refOrder": "", "unitPrice": 0.0, "totalValue": 0.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-26", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 6289.0, "client": "AI BATANGAS", "agent": "", "refOrder": "", "unitPrice": 8100.0, "totalValue": 8100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-01-03", "country": "Philippines", "txnId": "", "product": "MANGOESorig500g", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 6288.0, "client": "ALDRIAN", "agent": "", "refOrder": "", "unitPrice": 8200.0, "totalValue": 8200.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-17", "country": "Philippines", "txnId": "", "product": "JACKFRUIT", "category": "", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 25.0, "runningStock": 6263.0, "client": "ANTONIO BERNAL", "agent": "", "refOrder": "", "unitPrice": 3325.0, "totalValue": 83125.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-30", "country": "Philippines", "txnId": "", "product": "WS2", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 50.0, "runningStock": 6213.0, "client": "ANTONIO BERNAL", "agent": "", "refOrder": "", "unitPrice": 8731.8, "totalValue": 436590.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-17", "country": "Philippines", "txnId": "", "product": "MANGOESorig5kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 6212.0, "client": "CAROL NABONG", "agent": "", "refOrder": "", "unitPrice": 8100.0, "totalValue": 8100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-20", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 6.0, "runningStock": 6206.0, "client": "CONCEPCION MAGBOJOS", "agent": "", "refOrder": "", "unitPrice": 8340.0, "totalValue": 50040.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-20", "country": "Philippines", "txnId": "", "product": "MANGOESchilli5kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 9.0, "runningStock": 6197.0, "client": "CONCEPCION MAGBOJOS", "agent": "", "refOrder": "", "unitPrice": 8340.0, "totalValue": 75060.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-13", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 2.0, "runningStock": 6195.0, "client": "CONCEPCION MAGBOJOS", "agent": "", "refOrder": "", "unitPrice": 8000.0, "totalValue": 16000.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-13", "country": "Philippines", "txnId": "", "product": "MANGOESorig5kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 10.0, "runningStock": 6185.0, "client": "CONCEPCION MAGBOJOS", "agent": "", "refOrder": "", "unitPrice": 8000.0, "totalValue": 80000.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-19", "country": "Philippines", "txnId": "", "product": "MANGOESorig5kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 25.0, "runningStock": 6160.0, "client": "CONCEPCION MAGBOJOS", "agent": "", "refOrder": "", "unitPrice": 7560.0, "totalValue": 189000.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-30", "country": "Philippines", "txnId": "", "product": "MANGOESorig5kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 15.0, "runningStock": 6145.0, "client": "CONCEPCION MAGBOJOS", "agent": "", "refOrder": "", "unitPrice": 7560.0, "totalValue": 113400.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-17", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 6144.0, "client": "CONEY MENDOZA", "agent": "", "refOrder": "", "unitPrice": 8100.0, "totalValue": 8100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-07-03", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 6143.0, "client": "CHINOS DELI", "agent": "", "refOrder": "", "unitPrice": 8100.0, "totalValue": 8100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-21", "country": "Philippines", "txnId": "", "product": "WS2", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 115.0, "runningStock": 6028.0, "client": "DANNY", "agent": "", "refOrder": "", "unitPrice": 8204.57913, "totalValue": 943526.6, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-28", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 19.0, "runningStock": 6009.0, "client": "DANNY", "agent": "", "refOrder": "", "unitPrice": 7900.0, "totalValue": 150100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-28", "country": "Philippines", "txnId": "", "product": "MANGOESorig5kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 30.0, "runningStock": 5979.0, "client": "DANNY", "agent": "", "refOrder": "", "unitPrice": 7900.0, "totalValue": 237000.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-28", "country": "Philippines", "txnId": "", "product": "MANGOESorig500g", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5978.0, "client": "DANNY", "agent": "", "refOrder": "", "unitPrice": 7900.0, "totalValue": 7900.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-28", "country": "Philippines", "txnId": "", "product": "MANGOESchilli500g", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5977.0, "client": "DANNY", "agent": "", "refOrder": "", "unitPrice": 7900.0, "totalValue": 7900.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-20", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5976.0, "client": "ED VISTA", "agent": "", "refOrder": "", "unitPrice": 8100.0, "totalValue": 8100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-20", "country": "Philippines", "txnId": "", "product": "MANGOESorig500g", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5975.0, "client": "EFRAIM", "agent": "", "refOrder": "", "unitPrice": 8550.0, "totalValue": 8550.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-20", "country": "Philippines", "txnId": "", "product": "MANGOESchilli500g", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5974.0, "client": "EFRAIM", "agent": "", "refOrder": "", "unitPrice": 8550.0, "totalValue": 8550.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-09-03", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5973.0, "client": "GERALD", "agent": "", "refOrder": "", "unitPrice": 8100.0, "totalValue": 8100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-28", "country": "Philippines", "txnId": "", "product": "MANGOESorig5kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 10.0, "runningStock": 5963.0, "client": "GOLDEN YEMA", "agent": "", "refOrder": "", "unitPrice": 8000.0, "totalValue": 80000.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-21", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 25.0, "runningStock": 5938.0, "client": "KIM ENRIQUEZ", "agent": "", "refOrder": "", "unitPrice": 7960.0, "totalValue": 199000.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-11-03", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 25.0, "runningStock": 5913.0, "client": "KIM ENRIQUEZ", "agent": "", "refOrder": "", "unitPrice": 7960.0, "totalValue": 199000.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-19", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 25.0, "runningStock": 5888.0, "client": "KIM ENRIQUEZ", "agent": "", "refOrder": "", "unitPrice": 7960.0, "totalValue": 199000.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-26", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 25.0, "runningStock": 5863.0, "client": "KIM ENRIQUEZ", "agent": "", "refOrder": "", "unitPrice": 7900.0, "totalValue": 197500.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-06-03", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5862.0, "client": "MARIJUNE SUE SIY", "agent": "", "refOrder": "", "unitPrice": 8100.0, "totalValue": 8100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-31", "country": "Philippines", "txnId": "", "product": "WS1", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5861.0, "client": "MARIJUNE SUE SIY", "agent": "", "refOrder": "", "unitPrice": 10500.84, "totalValue": 10500.84, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-31", "country": "Philippines", "txnId": "", "product": "WS2", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 2.0, "runningStock": 5859.0, "client": "MARIJUNE SUE SIY", "agent": "", "refOrder": "", "unitPrice": 9185.0, "totalValue": 18370.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-31", "country": "Philippines", "txnId": "", "product": "SP", "category": "", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 10.0, "runningStock": 5849.0, "client": "MARIJUNE SUE SIY", "agent": "", "refOrder": "", "unitPrice": 5329.8, "totalValue": 53298.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-31", "country": "Philippines", "txnId": "", "product": "COFFEE-6", "category": "Coffee", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5848.0, "client": "MARIJUNE SUE SIY", "agent": "", "refOrder": "", "unitPrice": 4200.0, "totalValue": 4200.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-28", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5847.0, "client": "PAT BARRAMEDA", "agent": "", "refOrder": "", "unitPrice": 8100.0, "totalValue": 8100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-28", "country": "Philippines", "txnId": "", "product": "WS2", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 50.0, "runningStock": 5797.0, "client": "PRINCESS", "agent": "", "refOrder": "", "unitPrice": 8731.8, "totalValue": 436590.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-23", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5796.0, "client": "RAFFY JAY ALLERA", "agent": "", "refOrder": "", "unitPrice": 8100.0, "totalValue": 8100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-17", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 19.0, "runningStock": 5777.0, "client": "ROGEN", "agent": "", "refOrder": "", "unitPrice": 7900.0, "totalValue": 150100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-17", "country": "Philippines", "txnId": "", "product": "MANGOESorig500g", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5776.0, "client": "ROGEN", "agent": "", "refOrder": "", "unitPrice": 7900.0, "totalValue": 7900.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-17", "country": "Philippines", "txnId": "", "product": "COFFEE-12", "category": "Coffee", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5775.0, "client": "ROGEN", "agent": "", "refOrder": "", "unitPrice": 6500.0, "totalValue": 6500.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-17", "country": "Philippines", "txnId": "", "product": "COFFEE-6", "category": "Coffee", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5774.0, "client": "ROGEN", "agent": "", "refOrder": "", "unitPrice": 4200.0, "totalValue": 4200.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-30", "country": "Philippines", "txnId": "", "product": "WW320", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 5.0, "runningStock": 5769.0, "client": "RONA", "agent": "", "refOrder": "", "unitPrice": 11226.6, "totalValue": 56133.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-30", "country": "Philippines", "txnId": "", "product": "WS1", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 15.0, "runningStock": 5754.0, "client": "RONA", "agent": "", "refOrder": "", "unitPrice": 10160.64, "totalValue": 152409.6, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-30", "country": "Philippines", "txnId": "", "product": "WS2", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 7.0, "runningStock": 5747.0, "client": "RONA", "agent": "", "refOrder": "", "unitPrice": 8845.2, "totalValue": 61916.4, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-30", "country": "Philippines", "txnId": "", "product": "MANGOESorig5kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 2.0, "runningStock": 5745.0, "client": "RONA", "agent": "", "refOrder": "", "unitPrice": 8100.0, "totalValue": 16200.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-30", "country": "Philippines", "txnId": "", "product": "COFFEE-6", "category": "Coffee", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5744.0, "client": "RONA", "agent": "", "refOrder": "", "unitPrice": 4200.0, "totalValue": 4200.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-26", "country": "Philippines", "txnId": "", "product": "W320", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 76.0, "runningStock": 5668.0, "client": "RYAN", "agent": "", "refOrder": "", "unitPrice": 10886.4, "totalValue": 827366.4, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-26", "country": "Philippines", "txnId": "", "product": "WS1", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 24.0, "runningStock": 5644.0, "client": "RYAN", "agent": "", "refOrder": "", "unitPrice": 8958.6, "totalValue": 215006.4, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-03", "country": "Philippines", "txnId": "", "product": "MANGOESorig5kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5643.0, "client": "TERESA TINGSON", "agent": "", "refOrder": "", "unitPrice": 8100.0, "totalValue": 8100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}];
+const RAW_DATA = [{"date": "2025-04-02", "country": "Malaysia", "txnId": "TXN-001", "product": "WS1", "category": "Cashew", "unitType": "Box", "txnType": "IN", "qtyIn": 500.0, "qtyOut": 0.0, "runningStock": 500.0, "client": "Main Supplier", "agent": "Florence", "refOrder": "PO-2025-001", "unitPrice": 8620.0, "totalValue": 4310000.0, "warehouse": "Main Warehouse", "condition": "Good", "remarks": "First shipment", "loggedBy": "Jawad"}, {"date": "2025-04-03", "country": "Malaysia", "txnId": "TXN-002", "product": "WS2", "category": "Cashew", "unitType": "Box", "txnType": "IN", "qtyIn": 300.0, "qtyOut": 0.0, "runningStock": 800.0, "client": "Main Supplier", "agent": "Florence", "refOrder": "PO-2025-002", "unitPrice": 7900.0, "totalValue": 2370000.0, "warehouse": "Main Warehouse", "condition": "Good", "remarks": "", "loggedBy": "Jawad"}, {"date": "2025-04-03", "country": "Malaysia", "txnId": "TXN-003", "product": "WS1", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 3.0, "runningStock": 797.0, "client": "JOSEFINA", "agent": "Florence", "refOrder": "ORD-001", "unitPrice": 8620.0, "totalValue": 25860.0, "warehouse": "Main Warehouse", "condition": "Good", "remarks": "Confirmed W/VN", "loggedBy": "Jawad"}, {"date": "2025-04-08", "country": "Malaysia", "txnId": "TXN-004", "product": "WS2", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 22.0, "runningStock": 775.0, "client": "JOSEFINA", "agent": "Florence", "refOrder": "ORD-002", "unitPrice": 7900.0, "totalValue": 173800.0, "warehouse": "Main Warehouse", "condition": "Good", "remarks": "", "loggedBy": "Jawad"}, {"date": "2025-04-08", "country": "Malaysia", "txnId": "TXN-005", "product": "VEGGIES", "category": "Veggies", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 2.0, "runningStock": 773.0, "client": "FELLY", "agent": "Florence", "refOrder": "ORD-003", "unitPrice": 4050.0, "totalValue": 8100.0, "warehouse": "Cold Storage", "condition": "Good", "remarks": "Free delivery", "loggedBy": "Jawad"}, {"date": "2025-04-13", "country": "Malaysia", "txnId": "TXN-006", "product": "WS1", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 2.0, "runningStock": 771.0, "client": "CHARLES", "agent": "Florence", "refOrder": "ORD-004", "unitPrice": 8620.0, "totalValue": 17240.0, "warehouse": "Main Warehouse", "condition": "Good", "remarks": "Confirmed W/VN", "loggedBy": "Jawad"}, {"date": "2025-05-01", "country": "Malaysia", "txnId": "TXN-007", "product": "WW320", "category": "Cashew", "unitType": "Box", "txnType": "IN", "qtyIn": 200.0, "qtyOut": 0.0, "runningStock": 971.0, "client": "Main Supplier", "agent": "Florence", "refOrder": "PO-2025-003", "unitPrice": 9200.0, "totalValue": 1840000.0, "warehouse": "Main Warehouse", "condition": "Good", "remarks": "", "loggedBy": "Jawad"}, {"date": "2025-05-05", "country": "Malaysia", "txnId": "TXN-008", "product": "MANGO-1KG", "category": "Mango", "unitType": "Box", "txnType": "IN", "qtyIn": 400.0, "qtyOut": 0.0, "runningStock": 1371.0, "client": "Main Supplier", "agent": "Florence", "refOrder": "PO-2025-004", "unitPrice": 3500.0, "totalValue": 1400000.0, "warehouse": "Cold Storage", "condition": "Good", "remarks": "Original 1kg", "loggedBy": "Jawad"}, {"date": "2025-05-10", "country": "Malaysia", "txnId": "TXN-009", "product": "COFFEE-12", "category": "Coffee", "unitType": "Pack", "txnType": "IN", "qtyIn": 20.0, "qtyOut": 0.0, "runningStock": 1391.0, "client": "Main Supplier", "agent": "Florence", "refOrder": "PO-2025-005", "unitPrice": 2800.0, "totalValue": 56000.0, "warehouse": "Main Warehouse", "condition": "Good", "remarks": "12 caps per pack", "loggedBy": "Jawad"}, {"date": "2025-05-15", "country": "Malaysia", "txnId": "TXN-010", "product": "SP", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 1390.0, "client": "TERESSA", "agent": "Florence", "refOrder": "ORD-005", "unitPrice": 10500.0, "totalValue": 10500.0, "warehouse": "Main Warehouse", "condition": "Good", "remarks": "", "loggedBy": "Jawad"}, {"date": "2026-03-26", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 6289.0, "client": "AI BATANGAS", "agent": "", "refOrder": "", "unitPrice": 8100.0, "totalValue": 8100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-01-03", "country": "Philippines", "txnId": "", "product": "MANGOESorig500g", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 6288.0, "client": "ALDRIAN", "agent": "", "refOrder": "", "unitPrice": 8200.0, "totalValue": 8200.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-17", "country": "Philippines", "txnId": "", "product": "JACKFRUIT", "category": "", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 25.0, "runningStock": 6263.0, "client": "ANTONIO BERNAL", "agent": "", "refOrder": "", "unitPrice": 3325.0, "totalValue": 83125.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-30", "country": "Philippines", "txnId": "", "product": "WS2", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 50.0, "runningStock": 6213.0, "client": "ANTONIO BERNAL", "agent": "", "refOrder": "", "unitPrice": 8731.8, "totalValue": 436590.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-17", "country": "Philippines", "txnId": "", "product": "MANGOESorig5kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 6212.0, "client": "CAROL NABONG", "agent": "", "refOrder": "", "unitPrice": 8100.0, "totalValue": 8100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-20", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 6.0, "runningStock": 6206.0, "client": "CONCEPCION MAGBOJOS", "agent": "", "refOrder": "", "unitPrice": 8340.0, "totalValue": 50040.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-20", "country": "Philippines", "txnId": "", "product": "MANGOESchilli5kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 9.0, "runningStock": 6197.0, "client": "CONCEPCION MAGBOJOS", "agent": "", "refOrder": "", "unitPrice": 8340.0, "totalValue": 75060.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-13", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 2.0, "runningStock": 6195.0, "client": "CONCEPCION MAGBOJOS", "agent": "", "refOrder": "", "unitPrice": 8000.0, "totalValue": 16000.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-13", "country": "Philippines", "txnId": "", "product": "MANGOESorig5kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 10.0, "runningStock": 6185.0, "client": "CONCEPCION MAGBOJOS", "agent": "", "refOrder": "", "unitPrice": 8000.0, "totalValue": 80000.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-19", "country": "Philippines", "txnId": "", "product": "MANGOESorig5kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 25.0, "runningStock": 6160.0, "client": "CONCEPCION MAGBOJOS", "agent": "", "refOrder": "", "unitPrice": 7560.0, "totalValue": 189000.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-30", "country": "Philippines", "txnId": "", "product": "MANGOESorig5kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 15.0, "runningStock": 6145.0, "client": "CONCEPCION MAGBOJOS", "agent": "", "refOrder": "", "unitPrice": 7560.0, "totalValue": 113400.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-17", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 6144.0, "client": "CONEY MENDOZA", "agent": "", "refOrder": "", "unitPrice": 8100.0, "totalValue": 8100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-07-03", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 6143.0, "client": "CHINOS DELI", "agent": "", "refOrder": "", "unitPrice": 8100.0, "totalValue": 8100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-21", "country": "Philippines", "txnId": "", "product": "WS2", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 115.0, "runningStock": 6028.0, "client": "DANNY", "agent": "", "refOrder": "", "unitPrice": 8204.57913, "totalValue": 943526.6, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-28", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 19.0, "runningStock": 6009.0, "client": "DANNY", "agent": "", "refOrder": "", "unitPrice": 7900.0, "totalValue": 150100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-28", "country": "Philippines", "txnId": "", "product": "MANGOESorig5kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 30.0, "runningStock": 5979.0, "client": "DANNY", "agent": "", "refOrder": "", "unitPrice": 7900.0, "totalValue": 237000.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-28", "country": "Philippines", "txnId": "", "product": "MANGOESorig500g", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5978.0, "client": "DANNY", "agent": "", "refOrder": "", "unitPrice": 7900.0, "totalValue": 7900.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-28", "country": "Philippines", "txnId": "", "product": "MANGOESchilli500g", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5977.0, "client": "DANNY", "agent": "", "refOrder": "", "unitPrice": 7900.0, "totalValue": 7900.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-20", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5976.0, "client": "ED VISTA", "agent": "", "refOrder": "", "unitPrice": 8100.0, "totalValue": 8100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-20", "country": "Philippines", "txnId": "", "product": "MANGOESorig500g", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5975.0, "client": "EFRAIM", "agent": "", "refOrder": "", "unitPrice": 8550.0, "totalValue": 8550.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-20", "country": "Philippines", "txnId": "", "product": "MANGOESchilli500g", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5974.0, "client": "EFRAIM", "agent": "", "refOrder": "", "unitPrice": 8550.0, "totalValue": 8550.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-09-03", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5973.0, "client": "GERALD", "agent": "", "refOrder": "", "unitPrice": 8100.0, "totalValue": 8100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-28", "country": "Philippines", "txnId": "", "product": "MANGOESorig5kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 10.0, "runningStock": 5963.0, "client": "GOLDEN YEMA", "agent": "", "refOrder": "", "unitPrice": 8000.0, "totalValue": 80000.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-21", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 25.0, "runningStock": 5938.0, "client": "KIM ENRIQUEZ", "agent": "", "refOrder": "", "unitPrice": 7960.0, "totalValue": 199000.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-11-03", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 25.0, "runningStock": 5913.0, "client": "KIM ENRIQUEZ", "agent": "", "refOrder": "", "unitPrice": 7960.0, "totalValue": 199000.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-19", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 25.0, "runningStock": 5888.0, "client": "KIM ENRIQUEZ", "agent": "", "refOrder": "", "unitPrice": 7960.0, "totalValue": 199000.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-26", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 25.0, "runningStock": 5863.0, "client": "KIM ENRIQUEZ", "agent": "", "refOrder": "", "unitPrice": 7900.0, "totalValue": 197500.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-06-03", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5862.0, "client": "MARIJUNE SUE SIY", "agent": "", "refOrder": "", "unitPrice": 8100.0, "totalValue": 8100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-31", "country": "Philippines", "txnId": "", "product": "WS1", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5861.0, "client": "MARIJUNE SUE SIY", "agent": "", "refOrder": "", "unitPrice": 10500.84, "totalValue": 10500.84, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-31", "country": "Philippines", "txnId": "", "product": "WS2", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 2.0, "runningStock": 5859.0, "client": "MARIJUNE SUE SIY", "agent": "", "refOrder": "", "unitPrice": 9185.0, "totalValue": 18370.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-31", "country": "Philippines", "txnId": "", "product": "SP", "category": "", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 10.0, "runningStock": 5849.0, "client": "MARIJUNE SUE SIY", "agent": "", "refOrder": "", "unitPrice": 5329.8, "totalValue": 53298.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-31", "country": "Philippines", "txnId": "", "product": "COFFEE-6", "category": "Coffee", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5848.0, "client": "MARIJUNE SUE SIY", "agent": "", "refOrder": "", "unitPrice": 4200.0, "totalValue": 4200.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-28", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5847.0, "client": "PAT BARRAMEDA", "agent": "", "refOrder": "", "unitPrice": 8100.0, "totalValue": 8100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-28", "country": "Philippines", "txnId": "", "product": "WS2", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 50.0, "runningStock": 5797.0, "client": "PRINCESS", "agent": "", "refOrder": "", "unitPrice": 8731.8, "totalValue": 436590.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-23", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5796.0, "client": "RAFFY JAY ALLERA", "agent": "", "refOrder": "", "unitPrice": 8100.0, "totalValue": 8100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-17", "country": "Philippines", "txnId": "", "product": "MANGOESorig1kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 19.0, "runningStock": 5777.0, "client": "ROGEN", "agent": "", "refOrder": "", "unitPrice": 7900.0, "totalValue": 150100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-17", "country": "Philippines", "txnId": "", "product": "MANGOESorig500g", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5776.0, "client": "ROGEN", "agent": "", "refOrder": "", "unitPrice": 7900.0, "totalValue": 7900.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-17", "country": "Philippines", "txnId": "", "product": "COFFEE-12", "category": "Coffee", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5775.0, "client": "ROGEN", "agent": "", "refOrder": "", "unitPrice": 6500.0, "totalValue": 6500.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-02-17", "country": "Philippines", "txnId": "", "product": "COFFEE-6", "category": "Coffee", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5774.0, "client": "ROGEN", "agent": "", "refOrder": "", "unitPrice": 4200.0, "totalValue": 4200.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-30", "country": "Philippines", "txnId": "", "product": "WW320", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 5.0, "runningStock": 5769.0, "client": "RONA", "agent": "", "refOrder": "", "unitPrice": 11226.6, "totalValue": 56133.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-30", "country": "Philippines", "txnId": "", "product": "WS1", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 15.0, "runningStock": 5754.0, "client": "RONA", "agent": "", "refOrder": "", "unitPrice": 10160.64, "totalValue": 152409.6, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-30", "country": "Philippines", "txnId": "", "product": "WS2", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 7.0, "runningStock": 5747.0, "client": "RONA", "agent": "", "refOrder": "", "unitPrice": 8845.2, "totalValue": 61916.4, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-30", "country": "Philippines", "txnId": "", "product": "MANGOESorig5kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 2.0, "runningStock": 5745.0, "client": "RONA", "agent": "", "refOrder": "", "unitPrice": 8100.0, "totalValue": 16200.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-30", "country": "Philippines", "txnId": "", "product": "COFFEE-6", "category": "Coffee", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5744.0, "client": "RONA", "agent": "", "refOrder": "", "unitPrice": 4200.0, "totalValue": 4200.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-26", "country": "Philippines", "txnId": "", "product": "W320", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 76.0, "runningStock": 5668.0, "client": "RYAN", "agent": "", "refOrder": "", "unitPrice": 10886.4, "totalValue": 827366.4, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-26", "country": "Philippines", "txnId": "", "product": "WS1", "category": "Cashew", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 24.0, "runningStock": 5644.0, "client": "RYAN", "agent": "", "refOrder": "", "unitPrice": 8958.6, "totalValue": 215006.4, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}, {"date": "2026-03-03", "country": "Philippines", "txnId": "", "product": "MANGOESorig5kg", "category": "Mango", "unitType": "Box", "txnType": "OUT", "qtyIn": 0.0, "qtyOut": 1.0, "runningStock": 5643.0, "client": "TERESA TINGSON", "agent": "", "refOrder": "", "unitPrice": 8100.0, "totalValue": 8100.0, "warehouse": "", "condition": "", "remarks": "", "loggedBy": ""}];
 
-// ── THEME ──────────────────────────────────────────────────────────────────
+// THEME
 let dark = true;
 document.getElementById('themeBtn').addEventListener('click', () => {
   dark = !dark;
@@ -353,228 +493,230 @@ document.getElementById('themeBtn').addEventListener('click', () => {
   renderAll(getFiltered());
 });
 
-// ── PALETTE ───────────────────────────────────────────────────────────────
-const G = ['#2da44e','#3fb950','#7ee787','#56d364','#26a641','#1a7f37','#0a4b1c'];
-const M = ['#2da44e','#388bfd','#d29922','#f85149','#a371f7','#ffa657','#3fb950','#79c0ff','#ff8080','#d2a8ff'];
+// TABS
+function switchTab(name) {
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
 
-function gColor() { return dark ? '#8b949e' : '#5a7a5a'; }
-function bColor() { return dark ? '#30363d' : '#bdd8bd'; }
-
-// ── BUILD FILTERS ─────────────────────────────────────────────────────────
+// DROPDOWN ENGINE
+const DD_STATE = {};
 function uniq(arr) { return [...new Set(arr)].filter(Boolean).sort(); }
-function buildMsel(id, vals) {
-  document.getElementById(id).innerHTML = vals.map(v =>
-    `<label><input type="checkbox" value="${v}" checked> ${v}</label>`).join('');
-}
-buildMsel('f_country',   uniq(RAW_DATA.map(r => r.country)));
-buildMsel('f_category',  uniq(RAW_DATA.map(r => r.category)));
-buildMsel('f_product',   uniq(RAW_DATA.map(r => r.product)));
-buildMsel('f_warehouse', uniq(RAW_DATA.map(r => r.warehouse)));
 
-// ── FILTER LOGIC ──────────────────────────────────────────────────────────
-function getChecked(id) {
-  return [...document.querySelectorAll(`#${id} input:checked`)].map(i => i.value);
+function initDD(key, values, labelFn) {
+  DD_STATE[key] = { values, selected: new Set(values) };
+  const list = document.getElementById('list_' + key);
+  if (!list) return;
+  list.innerHTML = values.map(v => `
+    <div class="dd-item" data-val="${v}">
+      <input type="checkbox" checked onchange="toggleItem('${key}','${v}',this.checked)">
+      <span class="dd-item-label">${labelFn ? labelFn(v) : v}</span>
+    </div>`).join('');
+  updateBadge(key);
 }
+
+function toggleDD(key) {
+  const trigger = document.querySelector(`#dd_${key} .dd-trigger`);
+  const panel   = document.getElementById('panel_' + key);
+  const wasOpen = panel.classList.contains('open');
+  document.querySelectorAll('.dd-panel').forEach(p => p.classList.remove('open'));
+  document.querySelectorAll('.dd-trigger').forEach(t => t.classList.remove('open'));
+  if (!wasOpen) { panel.classList.add('open'); trigger.classList.add('open'); }
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.dd-filter')) {
+    document.querySelectorAll('.dd-panel').forEach(p => p.classList.remove('open'));
+    document.querySelectorAll('.dd-trigger').forEach(t => t.classList.remove('open'));
+  }
+});
+
+function toggleItem(key, val, checked) {
+  if (checked) DD_STATE[key].selected.add(val);
+  else DD_STATE[key].selected.delete(val);
+  updateBadge(key);
+}
+function selectAll(key) {
+  DD_STATE[key].values.forEach(v => DD_STATE[key].selected.add(v));
+  document.querySelectorAll(`#list_${key} input`).forEach(cb => cb.checked = true);
+  updateBadge(key);
+}
+function clearAll(key) {
+  DD_STATE[key].selected.clear();
+  document.querySelectorAll(`#list_${key} input`).forEach(cb => cb.checked = false);
+  updateBadge(key);
+}
+function searchDD(key, q) {
+  document.querySelectorAll(`#list_${key} .dd-item`).forEach(item => {
+    item.classList.toggle('hidden', !item.dataset.val.toLowerCase().includes(q.toLowerCase()));
+  });
+}
+function updateBadge(key) {
+  const badge = document.getElementById('badge_' + key);
+  if (!badge) return;
+  const tot = DD_STATE[key].values.length, sel = DD_STATE[key].selected.size;
+  badge.textContent = sel;
+  badge.className = 'dd-trigger-badge' + (sel === tot ? '' : sel === 0 ? ' none' : ' partial');
+}
+
+// INIT DROPDOWNS
+initDD('country',   uniq(RAW_DATA.map(r => r.country)));
+initDD('category',  uniq(RAW_DATA.map(r => r.category)));
+initDD('product',   uniq(RAW_DATA.map(r => r.product)));
+initDD('agent',     uniq(RAW_DATA.map(r => r.agent)));
+initDD('warehouse', uniq(RAW_DATA.map(r => r.warehouse)));
+initDD('txntype',   ['IN','OUT'], v => v === 'IN' ? '📥 Stock IN' : '📤 Stock OUT');
+
+// FILTERS
 function getFiltered() {
   const from = document.getElementById('f_from').value;
   const to   = document.getElementById('f_to').value;
-  const co   = getChecked('f_country');
-  const ca   = getChecked('f_category');
-  const pr   = getChecked('f_product');
-  const wh   = getChecked('f_warehouse');
-  const tt   = getChecked('f_txntype');
   const vmin = parseFloat(document.getElementById('f_vmin').value) || -Infinity;
   const vmax = parseFloat(document.getElementById('f_vmax').value) ||  Infinity;
   const umin = parseFloat(document.getElementById('f_umin').value) || -Infinity;
   const umax = parseFloat(document.getElementById('f_umax').value) ||  Infinity;
   return RAW_DATA.filter(r =>
     r.date >= from && r.date <= to &&
-    (co.includes(r.country)) &&
-    (ca.includes(r.category) || !r.category) &&
-    (pr.includes(r.product)) &&
-    (wh.includes(r.warehouse)) &&
-    tt.includes(r.txnType) &&
+    DD_STATE['country'].selected.has(r.country) &&
+    DD_STATE['category'].selected.has(r.category) &&
+    DD_STATE['product'].selected.has(r.product) &&
+    (DD_STATE['agent'].selected.has(r.agent) || (!r.agent && DD_STATE['agent'].selected.size)) &&
+    (DD_STATE['warehouse'].selected.has(r.warehouse) || (!r.warehouse)) &&
+    DD_STATE['txntype'].selected.has(r.txnType) &&
     r.totalValue >= vmin && r.totalValue <= vmax &&
     r.unitPrice  >= umin && r.unitPrice  <= umax
   );
 }
+
 document.getElementById('applyBtn').addEventListener('click', () => renderAll(getFiltered()));
 document.getElementById('resetBtn').addEventListener('click', () => {
   document.getElementById('f_from').value = '2025-04-02';
   document.getElementById('f_to').value   = '2026-11-03';
-  document.querySelectorAll('.msel input').forEach(cb => cb.checked = true);
   ['f_vmin','f_vmax','f_umin','f_umax'].forEach(id => document.getElementById(id).value = '');
+  ['country','category','product','agent','warehouse','txntype'].forEach(k => selectAll(k));
   renderAll(RAW_DATA);
 });
 
-// ── CHART REGISTRY ────────────────────────────────────────────────────────
+// CHARTS
 const CH = {};
+function gC(){ return dark ? '#8b949e' : '#5a7a5a'; }
+function bC(){ return dark ? '#30363d' : '#bdd8bd'; }
 function mk(id, cfg) {
   if (CH[id]) CH[id].destroy();
-  const ctx = document.getElementById(id);
-  if (!ctx) return;
-  Chart.defaults.color       = gColor();
-  Chart.defaults.borderColor = bColor();
+  const ctx = document.getElementById(id); if (!ctx) return;
+  Chart.defaults.color = gC(); Chart.defaults.borderColor = bC();
   CH[id] = new Chart(ctx, cfg);
 }
-const fmtP = v => v >= 1e6 ? '₱'+(v/1e6).toFixed(2)+'M' : v >= 1e3 ? '₱'+(v/1e3).toFixed(1)+'K' : '₱'+v.toFixed(0);
-const fmtPF = v => '₱'+v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const fP = v => v>=1e6?'₱'+(v/1e6).toFixed(2)+'M':v>=1e3?'₱'+(v/1e3).toFixed(1)+'K':'₱'+v.toFixed(0);
+const fPF = v => '₱'+v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const G = ['#2da44e','#3fb950','#7ee787','#56d364','#26a641','#1a7f37'];
+const M = ['#2da44e','#388bfd','#d29922','#f85149','#a371f7','#ffa657','#3fb950','#79c0ff','#ff8080','#d2a8ff'];
+function topN(data, kFn, vFn, n=8){ const m={}; data.forEach(r=>{const k=kFn(r);if(k)m[k]=(m[k]||0)+vFn(r);}); return Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,n); }
 
-function topN(data, keyFn, valFn, n=8) {
-  const m = {};
-  data.forEach(r => { const k=keyFn(r); if(k) m[k]=(m[k]||0)+valFn(r); });
-  return Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,n);
-}
-
-// ── RENDER ALL ────────────────────────────────────────────────────────────
 function renderAll(data) {
   document.getElementById('recCount').textContent = `Showing ${data.length} records`;
+  const inD=data.filter(r=>r.txnType==='IN'), outD=data.filter(r=>r.txnType==='OUT');
+  const tI=inD.reduce((s,r)=>s+r.totalValue,0), tO=outD.reduce((s,r)=>s+r.totalValue,0);
+  const avgP=data.length?data.reduce((s,r)=>s+r.unitPrice,0)/data.length:0;
+  const cats={}; data.forEach(r=>{cats[r.category]=(cats[r.category]||0)+r.totalValue;});
+  const topCat=Object.entries(cats).sort((a,b)=>b[1]-a[1])[0];
+  const net=tI-tO, stRate=tI>0?((tO/tI)*100).toFixed(1):0;
 
-  // KPIs
-  const inD  = data.filter(r=>r.txnType==='IN');
-  const outD = data.filter(r=>r.txnType==='OUT');
-  const totIn  = inD.reduce((s,r)=>s+r.totalValue,0);
-  const totOut = outD.reduce((s,r)=>s+r.totalValue,0);
-  const avgP   = data.length ? data.reduce((s,r)=>s+r.unitPrice,0)/data.length : 0;
-  const lastStock = data.length ? data[data.length-1].runningStock : 0;
-  const cats = {}; data.forEach(r=>{cats[r.category]=(cats[r.category]||0)+r.totalValue;});
-  const topCat = Object.entries(cats).sort((a,b)=>b[1]-a[1])[0];
-  const clients = new Set(data.filter(r=>r.txnType==='OUT').map(r=>r.client));
+  document.getElementById('k_in').textContent=fP(tI);
+  document.getElementById('k_out').textContent=fP(tO);
+  const ne=document.getElementById('k_net'); ne.textContent=fP(Math.abs(net)); ne.style.color=net>=0?'var(--g4)':'var(--red)';
+  document.getElementById('k_txn').textContent=data.length;
+  document.getElementById('k_clients').textContent=new Set(outD.map(r=>r.client)).size;
+  document.getElementById('k_avgprice').textContent=fP(avgP);
+  document.getElementById('k_topcat').textContent=topCat?topCat[0]:'–';
+  document.getElementById('k_sellthrough').textContent=stRate+'%';
 
-  document.getElementById('k_in').textContent      = fmtP(totIn);
-  document.getElementById('k_out').textContent     = fmtP(totOut);
-  const netEl = document.getElementById('k_net');
-  const net = totIn-totOut;
-  netEl.textContent = fmtP(Math.abs(net));
-  netEl.style.color = net>=0 ? 'var(--g4)' : 'var(--red)';
-  document.getElementById('k_txn').textContent     = data.length;
-  document.getElementById('k_clients').textContent = clients.size;
-  document.getElementById('k_avgprice').textContent= fmtP(avgP);
-  document.getElementById('k_topcat').textContent  = topCat ? topCat[0] : '–';
-  document.getElementById('k_stock').textContent   = lastStock.toLocaleString();
-
-  // Insights
-  const topClient = topN(outD, r=>r.client, r=>r.totalValue, 1)[0];
-  document.getElementById('ins_topclient').textContent =
-    topClient ? `${topClient[0]} — ${fmtP(topClient[1])}` : '–';
-  document.getElementById('ins_topcat').textContent =
-    topCat ? `${topCat[0]} — ${fmtP(topCat[1])} total value across ${data.filter(r=>r.category===topCat[0]).length} transactions` : '–';
-  const sellThru = totIn > 0 ? ((totOut/totIn)*100).toFixed(1) : 0;
-  document.getElementById('ins_health').textContent =
-    `Sell-through rate: ${sellThru}% · Net value retained: ${fmtP(Math.max(0,net))}`;
+  const topClient=topN(outD,r=>r.client,r=>r.totalValue,1)[0];
+  document.getElementById('ins_topclient').textContent=topClient?`${topClient[0]} — ${fP(topClient[1])}`:'–';
+  document.getElementById('ins_topcat').textContent=topCat?`${topCat[0]} — ${fP(topCat[1])} across ${data.filter(r=>r.category===topCat[0]).length} txns`:'–';
+  document.getElementById('ins_health').textContent=`Sell-through: ${stRate}% · Net retained: ${fP(Math.max(0,net))}`;
 
   renderCharts(data);
   renderTable(data);
 }
 
-function renderCharts(data) {
-  // ── Monthly IN vs OUT
-  const months = {};
-  data.forEach(r=>{
-    const m = r.date.slice(0,7);
-    if(!months[m]) months[m]={IN:0,OUT:0,count:0};
-    months[m][r.txnType]+=r.totalValue; months[m].count++;
-  });
-  const mLabels = Object.keys(months).sort();
-  const mFmt = l => { const [y,mo]=l.split('-'); return ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+mo]+"'"+(y.slice(2)); };
-  mk('c_monthly',{type:'bar',data:{labels:mLabels.map(mFmt),datasets:[
-    {label:'Stock IN',data:mLabels.map(l=>months[l].IN),backgroundColor:'rgba(45,164,78,.75)',borderColor:'#2da44e',borderWidth:1,borderRadius:4,borderSkipped:false},
-    {label:'Stock OUT',data:mLabels.map(l=>months[l].OUT),backgroundColor:'rgba(248,81,73,.65)',borderColor:'#f85149',borderWidth:1,borderRadius:4,borderSkipped:false}
-  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{y:{ticks:{callback:v=>fmtP(v),font:{size:9}},grid:{color:bColor()}},x:{ticks:{font:{size:9}},grid:{display:false}}}}});
+function renderCharts(data){
+  const sorted=[...data].sort((a,b)=>a.date.localeCompare(b.date));
+  const months={};
+  data.forEach(r=>{const m=r.date.slice(0,7);if(!months[m])months[m]={IN:0,OUT:0,count:0};months[m][r.txnType]+=r.totalValue;months[m].count++;});
+  const mL=Object.keys(months).sort();
+  const mF=l=>{const[y,mo]=l.split('-');return["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+mo]+"'"+(y.slice(2));};
+  const tI=data.filter(r=>r.txnType==='IN').reduce((s,r)=>s+r.totalValue,0);
+  const tO=data.filter(r=>r.txnType==='OUT').reduce((s,r)=>s+r.totalValue,0);
+  const baseOpts={responsive:true,maintainAspectRatio:false};
 
-  // ── IN vs OUT Donut
-  const totIn=data.filter(r=>r.txnType==='IN').reduce((s,r)=>s+r.totalValue,0);
-  const totOut=data.filter(r=>r.txnType==='OUT').reduce((s,r)=>s+r.totalValue,0);
-  mk('c_inout_donut',{type:'doughnut',data:{labels:['Stock IN','Stock OUT'],datasets:[{data:[totIn,totOut],backgroundColor:['rgba(45,164,78,.85)','rgba(248,81,73,.75)'],borderColor:['#2da44e','#f85149'],borderWidth:2,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{font:{size:10}}},tooltip:{callbacks:{label:c=>' '+fmtP(c.raw)}}}}});
+  mk('c_monthly',{type:'bar',data:{labels:mL.map(mF),datasets:[
+    {label:'Stock IN',data:mL.map(l=>months[l].IN),backgroundColor:'rgba(45,164,78,.75)',borderColor:'#2da44e',borderWidth:1,borderRadius:4,borderSkipped:false},
+    {label:'Stock OUT',data:mL.map(l=>months[l].OUT),backgroundColor:'rgba(248,81,73,.65)',borderColor:'#f85149',borderWidth:1,borderRadius:4,borderSkipped:false}
+  ]},options:{...baseOpts,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{y:{ticks:{callback:v=>fP(v),font:{size:9}},grid:{color:bC()}},x:{ticks:{font:{size:9}},grid:{display:false}}}}});
 
-  // ── Cumulative
-  const sorted = [...data].sort((a,b)=>a.date.localeCompare(b.date));
-  let cumIn=0,cumOut=0; const cumLabels=[],cumInArr=[],cumOutArr=[];
-  sorted.forEach(r=>{ if(r.txnType==='IN') cumIn+=r.totalValue; else cumOut+=r.totalValue; cumLabels.push(r.date.slice(5)); cumInArr.push(cumIn); cumOutArr.push(cumOut); });
-  mk('c_cumulative',{type:'line',data:{labels:cumLabels,datasets:[
-    {label:'Cumulative IN',data:cumInArr,borderColor:'#2da44e',backgroundColor:'rgba(45,164,78,.12)',fill:true,tension:.4,pointRadius:0,borderWidth:2},
-    {label:'Cumulative OUT',data:cumOutArr,borderColor:'#f85149',backgroundColor:'rgba(248,81,73,.08)',fill:true,tension:.4,pointRadius:0,borderWidth:2}
-  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:9}}}},scales:{y:{ticks:{callback:v=>fmtP(v),font:{size:9}},grid:{color:bColor()}},x:{ticks:{maxTicksLimit:6,font:{size:9}},grid:{display:false}}}}});
+  mk('c_inout_donut',{type:'doughnut',data:{labels:['Stock IN','Stock OUT'],datasets:[{data:[tI,tO],backgroundColor:['rgba(45,164,78,.85)','rgba(248,81,73,.75)'],borderColor:['#2da44e','#f85149'],borderWidth:2,hoverOffset:6}]},options:{...baseOpts,cutout:'62%',plugins:{legend:{position:'bottom',labels:{font:{size:10}}},tooltip:{callbacks:{label:c=>' '+fP(c.raw)}}}}});
 
-  // ── Txn count by month
-  mk('c_txn_month',{type:'bar',data:{labels:mLabels.map(mFmt),datasets:[{label:'Transactions',data:mLabels.map(l=>months[l].count),backgroundColor:'rgba(56,139,253,.7)',borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{size:9}},grid:{color:bColor()}},x:{ticks:{font:{size:9}},grid:{display:false}}}}});
+  let cI=0,cO=0;const cL=[],cIA=[],cOA=[];
+  sorted.forEach(r=>{if(r.txnType==='IN')cI+=r.totalValue;else cO+=r.totalValue;cL.push(r.date.slice(5));cIA.push(cI);cOA.push(cO);});
+  mk('c_cumulative',{type:'line',data:{labels:cL,datasets:[
+    {label:'Cum IN',data:cIA,borderColor:'#2da44e',backgroundColor:'rgba(45,164,78,.12)',fill:true,tension:.4,pointRadius:0,borderWidth:2},
+    {label:'Cum OUT',data:cOA,borderColor:'#f85149',backgroundColor:'rgba(248,81,73,.08)',fill:true,tension:.4,pointRadius:0,borderWidth:2}
+  ]},options:{...baseOpts,plugins:{legend:{position:'top',labels:{font:{size:9}}}},scales:{y:{ticks:{callback:v=>fP(v),font:{size:9}},grid:{color:bC()}},x:{ticks:{maxTicksLimit:6,font:{size:9}},grid:{display:false}}}}});
 
-  // ── Running stock
-  const sLabels=[],sVals=[];
-  sorted.forEach(r=>{sLabels.push(r.date.slice(5));sVals.push(r.runningStock);});
-  mk('c_running_stock',{type:'line',data:{labels:sLabels,datasets:[{label:'Running Stock',data:sVals,borderColor:'#d29922',backgroundColor:'rgba(210,153,34,.12)',fill:true,tension:.35,pointRadius:0,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{size:9}},grid:{color:bColor()}},x:{ticks:{maxTicksLimit:6,font:{size:9}},grid:{display:false}}}}});
+  mk('c_txn_month',{type:'bar',data:{labels:mL.map(mF),datasets:[{label:'Transactions',data:mL.map(l=>months[l].count),backgroundColor:'rgba(56,139,253,.7)',borderRadius:4,borderSkipped:false}]},options:{...baseOpts,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{size:9}},grid:{color:bC()}},x:{ticks:{font:{size:9}},grid:{display:false}}}}});
 
-  // ── Category bar
-  const catTop = topN(data,r=>r.category,r=>r.totalValue,6);
-  mk('c_cat_bar',{type:'bar',data:{labels:catTop.map(t=>t[0]),datasets:[{label:'Total Value',data:catTop.map(t=>t[1]),backgroundColor:G,borderRadius:5,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fmtP(v),font:{size:9}},grid:{color:bColor()}},y:{ticks:{font:{size:10}},grid:{display:false}}}}});
+  const sL=[],sV=[];sorted.forEach(r=>{sL.push(r.date.slice(5));sV.push(r.runningStock);});
+  mk('c_running_stock',{type:'line',data:{labels:sL,datasets:[{label:'Running Stock',data:sV,borderColor:'#d29922',backgroundColor:'rgba(210,153,34,.12)',fill:true,tension:.35,pointRadius:0,borderWidth:2}]},options:{...baseOpts,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{size:9}},grid:{color:bC()}},x:{ticks:{maxTicksLimit:6,font:{size:9}},grid:{display:false}}}}});
 
-  // ── Category pie
-  mk('c_cat_pie',{type:'pie',data:{labels:catTop.map(t=>t[0]),datasets:[{data:catTop.map(t=>t[1]),backgroundColor:M,borderWidth:2,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:9},boxWidth:9}},tooltip:{callbacks:{label:c=>' '+fmtP(c.raw)}}}}});
+  const catTop=topN(data,r=>r.category,r=>r.totalValue,6);
+  mk('c_cat_bar',{type:'bar',data:{labels:catTop.map(t=>t[0]),datasets:[{label:'Total Value',data:catTop.map(t=>t[1]),backgroundColor:G,borderRadius:5,borderSkipped:false}]},options:{indexAxis:'y',...baseOpts,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fP(v),font:{size:9}},grid:{color:bC()}},y:{ticks:{font:{size:10}},grid:{display:false}}}}});
 
-  // ── Category IN vs OUT grouped
-  const cats2 = uniq(data.map(r=>r.category)).filter(Boolean);
-  const catInV  = cats2.map(c=>data.filter(r=>r.category===c&&r.txnType==='IN').reduce((s,r)=>s+r.totalValue,0));
-  const catOutV = cats2.map(c=>data.filter(r=>r.category===c&&r.txnType==='OUT').reduce((s,r)=>s+r.totalValue,0));
+  mk('c_cat_pie',{type:'pie',data:{labels:catTop.map(t=>t[0]),datasets:[{data:catTop.map(t=>t[1]),backgroundColor:M,borderWidth:2,hoverOffset:8}]},options:{...baseOpts,plugins:{legend:{position:'bottom',labels:{font:{size:9},boxWidth:9}},tooltip:{callbacks:{label:c=>' '+fP(c.raw)}}}}});
+
+  const cats2=uniq(data.map(r=>r.category)).filter(Boolean);
   mk('c_cat_inout',{type:'bar',data:{labels:cats2,datasets:[
-    {label:'IN',data:catInV,backgroundColor:'rgba(45,164,78,.75)',borderRadius:4},
-    {label:'OUT',data:catOutV,backgroundColor:'rgba(248,81,73,.65)',borderRadius:4}
-  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:9}}}},scales:{y:{ticks:{callback:v=>fmtP(v),font:{size:9}},grid:{color:bColor()}},x:{ticks:{font:{size:9}},grid:{display:false}}}}});
+    {label:'IN',data:cats2.map(c=>data.filter(r=>r.category===c&&r.txnType==='IN').reduce((s,r)=>s+r.totalValue,0)),backgroundColor:'rgba(45,164,78,.75)',borderRadius:4},
+    {label:'OUT',data:cats2.map(c=>data.filter(r=>r.category===c&&r.txnType==='OUT').reduce((s,r)=>s+r.totalValue,0)),backgroundColor:'rgba(248,81,73,.65)',borderRadius:4}
+  ]},options:{...baseOpts,plugins:{legend:{position:'top',labels:{font:{size:9}}}},scales:{y:{ticks:{callback:v=>fP(v),font:{size:9}},grid:{color:bC()}},x:{ticks:{font:{size:9}},grid:{display:false}}}}});
 
-  // ── Top clients
-  const outData = data.filter(r=>r.txnType==='OUT');
-  const cliTop = topN(outData,r=>r.client,r=>r.totalValue,8);
-  mk('c_client',{type:'bar',data:{labels:cliTop.map(t=>t[0]),datasets:[{label:'Sales ₱',data:cliTop.map(t=>t[1]),backgroundColor:'rgba(163,113,247,.75)',borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fmtP(v),font:{size:9}},grid:{color:bColor()}},y:{ticks:{font:{size:10}},grid:{display:false}}}}});
+  const outD=data.filter(r=>r.txnType==='OUT');
+  const cliTop=topN(outD,r=>r.client,r=>r.totalValue,8);
+  mk('c_client',{type:'bar',data:{labels:cliTop.map(t=>t[0]),datasets:[{label:'Sales ₱',data:cliTop.map(t=>t[1]),backgroundColor:'rgba(163,113,247,.75)',borderRadius:4}]},options:{indexAxis:'y',...baseOpts,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fP(v),font:{size:9}},grid:{color:bC()}},y:{ticks:{font:{size:10}},grid:{display:false}}}}});
 
-  // ── Top products
-  const prodTop = topN(data,r=>r.product,r=>r.totalValue,8);
-  mk('c_product',{type:'bar',data:{labels:prodTop.map(t=>t[0]),datasets:[{label:'Value ₱',data:prodTop.map(t=>t[1]),backgroundColor:M,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fmtP(v),font:{size:9}},grid:{color:bColor()}},y:{ticks:{font:{size:9}},grid:{display:false}}}}});
+  const prodTop=topN(data,r=>r.product,r=>r.totalValue,8);
+  mk('c_product',{type:'bar',data:{labels:prodTop.map(t=>t[0]),datasets:[{label:'Value ₱',data:prodTop.map(t=>t[1]),backgroundColor:M,borderRadius:4}]},options:{indexAxis:'y',...baseOpts,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fP(v),font:{size:9}},grid:{color:bC()}},y:{ticks:{font:{size:9}},grid:{display:false}}}}});
 
-  // ── Client count
-  const cliCt = topN(outData,r=>r.client,_=>1,8);
-  mk('c_client_count',{type:'bar',data:{labels:cliCt.map(t=>t[0]),datasets:[{label:'Orders',data:cliCt.map(t=>t[1]),backgroundColor:M,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{size:9}},grid:{color:bColor()}},x:{ticks:{font:{size:9}},grid:{display:false}}}}});
+  const cliCt=topN(outD,r=>r.client,_=>1,8);
+  mk('c_client_count',{type:'bar',data:{labels:cliCt.map(t=>t[0]),datasets:[{label:'Orders',data:cliCt.map(t=>t[1]),backgroundColor:M,borderRadius:4}]},options:{...baseOpts,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{size:9}},grid:{color:bC()}},x:{ticks:{font:{size:9}},grid:{display:false}}}}});
 
-  // ── Country donut
-  const coTop = topN(data,r=>r.country,r=>r.totalValue);
-  mk('c_country',{type:'doughnut',data:{labels:coTop.map(t=>t[0]),datasets:[{data:coTop.map(t=>t[1]),backgroundColor:['rgba(45,164,78,.85)','rgba(56,139,253,.75)'],borderWidth:2,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{position:'bottom',labels:{font:{size:10}}},tooltip:{callbacks:{label:c=>' '+fmtP(c.raw)}}}}});
+  const coTop=topN(data,r=>r.country,r=>r.totalValue);
+  mk('c_country',{type:'doughnut',data:{labels:coTop.map(t=>t[0]),datasets:[{data:coTop.map(t=>t[1]),backgroundColor:['rgba(45,164,78,.85)','rgba(56,139,253,.75)'],borderWidth:2,hoverOffset:6}]},options:{...baseOpts,cutout:'55%',plugins:{legend:{position:'bottom',labels:{font:{size:10}}},tooltip:{callbacks:{label:c=>' '+fP(c.raw)}}}}});
 
-  // ── Warehouse bar
-  const whMap={}; data.forEach(r=>{whMap[r.warehouse]=(whMap[r.warehouse]||0)+1;});
-  mk('c_warehouse',{type:'doughnut',data:{labels:Object.keys(whMap),datasets:[{data:Object.values(whMap),backgroundColor:['rgba(210,153,34,.8)','rgba(255,166,87,.7)'],borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}},tooltip:{callbacks:{label:c=>` ${c.raw} transactions`}}}}});
+  const whMap={};data.forEach(r=>{if(r.warehouse)whMap[r.warehouse]=(whMap[r.warehouse]||0)+1;});
+  mk('c_warehouse',{type:'doughnut',data:{labels:Object.keys(whMap),datasets:[{data:Object.values(whMap),backgroundColor:['rgba(210,153,34,.8)','rgba(255,166,87,.7)'],borderWidth:2}]},options:{...baseOpts,plugins:{legend:{position:'bottom',labels:{font:{size:10}}},tooltip:{callbacks:{label:c=>`${c.raw} transactions`}}}}});
 
-  // ── Unit price histogram
-  const prices = data.map(r=>r.unitPrice).filter(v=>v>0);
-  if(prices.length){
-    const mn=Math.min(...prices),mx=Math.max(...prices);
-    const B=6, bs=(mx-mn)/B||1;
-    const cnt=new Array(B).fill(0);
-    prices.forEach(p=>{const i=Math.min(Math.floor((p-mn)/bs),B-1);cnt[i]++;});
-    const bucketLbls=cnt.map((_,i)=>'₱'+Math.round(mn+i*bs).toLocaleString());
-    mk('c_price_hist',{type:'bar',data:{labels:bucketLbls,datasets:[{label:'Count',data:cnt,backgroundColor:'rgba(255,166,87,.75)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{size:9}},grid:{color:bColor()}},x:{ticks:{font:{size:9}},grid:{display:false}}}}});
-  }
+  const prices=data.map(r=>r.unitPrice).filter(v=>v>0);
+  if(prices.length){const mn=Math.min(...prices),mx=Math.max(...prices),B=6,bs=(mx-mn)/B||1;
+    const cnt=new Array(B).fill(0);prices.forEach(p=>{const i=Math.min(Math.floor((p-mn)/bs),B-1);cnt[i]++;});
+    mk('c_price_hist',{type:'bar',data:{labels:cnt.map((_,i)=>'₱'+Math.round(mn+i*bs).toLocaleString()),datasets:[{label:'Count',data:cnt,backgroundColor:'rgba(255,166,87,.75)',borderRadius:4}]},options:{...baseOpts,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{size:9}},grid:{color:bC()}},x:{ticks:{font:{size:9}},grid:{display:false}}}}});}
 }
 
-function renderTable(data) {
-  const tb = document.getElementById('tblBody');
-  if(!data.length){tb.innerHTML='<tr><td colspan="12" style="text-align:center;padding:30px;color:var(--muted)">No records match filters</td></tr>';return;}
-  tb.innerHTML = data.slice(0,150).map(r=>`<tr>
-    <td>${r.date}</td>
-    <td style="font-size:10px;color:var(--muted)">${r.txnId}</td>
-    <td>${r.product}</td>
-    <td>${r.category}</td>
-    <td>${r.country}</td>
+function renderTable(data){
+  const tb=document.getElementById('tblBody');
+  if(!data.length){tb.innerHTML='<tr><td colspan="13" style="text-align:center;padding:30px;color:var(--muted)">No records match filters</td></tr>';return;}
+  tb.innerHTML=data.slice(0,150).map(r=>`<tr>
+    <td>${r.date}</td><td style="font-size:10px;color:var(--muted)">${r.txnId||'–'}</td>
+    <td>${r.product}</td><td>${r.category}</td><td>${r.country}</td>
     <td><span class="bdg ${r.txnType==='IN'?'bdg-in':'bdg-out'}">${r.txnType}</span></td>
     <td>${r.txnType==='IN'?r.qtyIn.toLocaleString():r.qtyOut.toLocaleString()}</td>
-    <td>${fmtPF(r.unitPrice)}</td>
-    <td style="font-weight:700">${fmtPF(r.totalValue)}</td>
-    <td>${r.client}</td>
-    <td>${r.warehouse}</td>
+    <td>${fPF(r.unitPrice)}</td><td style="font-weight:700">${fPF(r.totalValue)}</td>
+    <td>${r.client}</td><td>${r.agent||'–'}</td><td>${r.warehouse||'–'}</td>
     <td style="font-size:10px;color:var(--muted)">${r.remarks||'–'}</td>
   </tr>`).join('');
 }
 
-function uniq(arr){return[...new Set(arr)].filter(Boolean).sort();}
-
-// ── INIT ──────────────────────────────────────────────────────────────────
 renderAll(RAW_DATA);
 </script>
 </body>
