@@ -337,8 +337,13 @@ footer b{color:var(--g2);}
 
   <div class="sec-hdr">🌍 Geographic & Operational View</div>
   <div class="cg3">
-    <div class="card"><div class="card-title">Value by Country <em>₱ split</em></div><div class="cw"><canvas id="c_country"></canvas></div></div>
-    <div class="card"><div class="card-title">Warehouse Distribution <em>by count</em></div><div class="cw"><canvas id="c_warehouse"></canvas></div></div>
+    <div class="card"><div class="card-title">IN Value by Country <em>₱ (Malaysia only — PH prices not yet entered)</em></div><div class="cw"><canvas id="c_country"></canvas></div></div>
+    <div class="card"><div class="card-title">IN Quantity by Country <em>units procured</em></div><div class="cw"><canvas id="c_country_qty"></canvas></div></div>
+    <div class="card"><div class="card-title">OUT Value by Country <em>₱ sales by country</em></div><div class="cw"><canvas id="c_country_out"></canvas></div></div>
+  </div>
+  <div class="cg3">
+    <div class="card"><div class="card-title">IN vs OUT Qty by Country <em>procurement vs sales volume</em></div><div class="cw"><canvas id="c_country_inout_qty"></canvas></div></div>
+    <div class="card"><div class="card-title">Warehouse Distribution <em>by transaction count</em></div><div class="cw"><canvas id="c_warehouse"></canvas></div></div>
     <div class="card"><div class="card-title">Unit Price Distribution <em>price buckets</em></div><div class="cw"><canvas id="c_price_hist"></canvas></div></div>
   </div>
 
@@ -480,7 +485,10 @@ footer b{color:var(--g2);}
       <div class="rm-chart-item"><h4>Top Clients by Sales</h4><p>Top 8 clients ranked by total OUT value they've purchased. DANNY and RYAN are the top two revenue clients by a significant margin.</p></div>
       <div class="rm-chart-item"><h4>Top Products by Value</h4><p>Products ranked by combined transaction value. WS1 (Premium Cashew W-S1) leads due to its high unit price and large shipment volumes.</p></div>
       <div class="rm-chart-item"><h4>Transaction Count by Client</h4><p>How frequently each client appears in OUT records. High frequency + lower value = regular small buyers. Low frequency + high value = bulk/wholesale buyers.</p></div>
-      <div class="rm-chart-item"><h4>Value by Country</h4><p>Doughnut showing the ₱ split between Malaysia and Philippines. Malaysia holds the large cashew procurement (IN), Philippines is where most client sales (OUT) occur.</p></div>
+      <div class="rm-chart-item"><h4>IN Value by Country</h4><p>Doughnut showing ₱ procurement split by country. <strong>Malaysia = ₱9.98M</strong> (all priced). <strong>Philippines = ₱0</strong> — not a data error, unit prices simply haven't been entered for PH shipments yet. Use the Qty chart to see PH volume.</p></div>
+      <div class="rm-chart-item"><h4>IN Quantity by Country</h4><p>Doughnut showing <strong>unit volume</strong> procured per country — unaffected by missing prices. Philippines received <strong>4,900 units</strong> across 19 IN transactions (WS1, WS2, WW320, SP, Mangoes, Coffee, Jackfruit) compared to Malaysia's 1,420 units. PH is actually the larger procurement market by volume.</p></div>
+      <div class="rm-chart-item"><h4>OUT Value by Country</h4><p>Doughnut showing ₱ sales value by country. Useful to compare where revenue is being generated once prices are filled in for PH shipments.</p></div>
+      <div class="rm-chart-item"><h4>IN vs OUT Qty by Country</h4><p>Grouped bar comparing total units received (green) vs dispatched (red) per country. Clearly shows Philippines has far higher IN volume than OUT — large inventory is being held there. Malaysia's OUT exceeds its documented IN for some products due to cross-country stock movement.</p></div>
       <div class="rm-chart-item"><h4>Warehouse Distribution</h4><p>Transaction count split between Main Warehouse and Cold Storage. Cold Storage is used for perishable items (Mango, Veggies); Main Warehouse for Cashew, Coffee.</p></div>
       <div class="rm-chart-item"><h4>Unit Price Distribution</h4><p>Histogram bucketing unit prices into 6 ranges. Shows the pricing spread — whether the product mix is concentrated in low, mid, or high price points.</p></div>
     </div>
@@ -747,8 +755,28 @@ function renderCharts(data){
   const cliCt=topN(outD,r=>r.client,_=>1,8);
   mk('c_client_count',{type:'bar',data:{labels:cliCt.map(t=>t[0]),datasets:[{label:'Orders',data:cliCt.map(t=>t[1]),backgroundColor:M,borderRadius:4}]},options:{...baseOpts,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{size:9}},grid:{color:bC()}},x:{ticks:{font:{size:9}},grid:{display:false}}}}});
 
+  // IN Value by country
   const coTop=topN(data,r=>r.country,r=>r.totalValue);
   mk('c_country',{type:'doughnut',data:{labels:coTop.map(t=>t[0]),datasets:[{data:coTop.map(t=>t[1]),backgroundColor:['rgba(45,164,78,.85)','rgba(56,139,253,.75)'],borderWidth:2,hoverOffset:6}]},options:{...baseOpts,cutout:'55%',plugins:{legend:{position:'bottom',labels:{font:{size:10}}},tooltip:{callbacks:{label:c=>' '+fP(c.raw)}}}}});
+
+  // IN Quantity by country (shows Philippines volume even at ₱0)
+  const coQtyMap={};
+  data.filter(r=>r.txnType==='IN').forEach(r=>{coQtyMap[r.country]=(coQtyMap[r.country]||0)+r.qtyIn;});
+  mk('c_country_qty',{type:'doughnut',data:{labels:Object.keys(coQtyMap),datasets:[{data:Object.values(coQtyMap),backgroundColor:['rgba(45,164,78,.85)','rgba(163,113,247,.75)'],borderWidth:2,hoverOffset:6}]},options:{...baseOpts,cutout:'55%',plugins:{legend:{position:'bottom',labels:{font:{size:10}}},tooltip:{callbacks:{label:c=>`${c.raw.toLocaleString()} units`}}}}});
+
+  // OUT Value by country
+  const coOutMap={};
+  data.filter(r=>r.txnType==='OUT').forEach(r=>{coOutMap[r.country]=(coOutMap[r.country]||0)+r.totalValue;});
+  mk('c_country_out',{type:'doughnut',data:{labels:Object.keys(coOutMap),datasets:[{data:Object.values(coOutMap),backgroundColor:['rgba(45,164,78,.85)','rgba(56,139,253,.75)'],borderWidth:2,hoverOffset:6}]},options:{...baseOpts,cutout:'55%',plugins:{legend:{position:'bottom',labels:{font:{size:10}}},tooltip:{callbacks:{label:c=>' '+fP(c.raw)}}}}});
+
+  // IN vs OUT qty by country — grouped bar
+  const countries=uniq(data.map(r=>r.country));
+  const coInQty  = countries.map(c=>data.filter(r=>r.country===c&&r.txnType==='IN').reduce((s,r)=>s+r.qtyIn,0));
+  const coOutQty = countries.map(c=>data.filter(r=>r.country===c&&r.txnType==='OUT').reduce((s,r)=>s+r.qtyOut,0));
+  mk('c_country_inout_qty',{type:'bar',data:{labels:countries,datasets:[
+    {label:'QtyIN',  data:coInQty,  backgroundColor:'rgba(45,164,78,.75)',borderRadius:5,borderSkipped:false},
+    {label:'QtyOUT', data:coOutQty, backgroundColor:'rgba(248,81,73,.65)',borderRadius:5,borderSkipped:false}
+  ]},options:{...baseOpts,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{y:{ticks:{font:{size:9},callback:v=>v.toLocaleString()},grid:{color:bC()}},x:{ticks:{font:{size:11}},grid:{display:false}}}}});
 
   const whMap={};data.forEach(r=>{if(r.warehouse)whMap[r.warehouse]=(whMap[r.warehouse]||0)+1;});
   mk('c_warehouse',{type:'doughnut',data:{labels:Object.keys(whMap),datasets:[{data:Object.values(whMap),backgroundColor:['rgba(210,153,34,.8)','rgba(255,166,87,.7)'],borderWidth:2}]},options:{...baseOpts,plugins:{legend:{position:'bottom',labels:{font:{size:10}}},tooltip:{callbacks:{label:c=>`${c.raw} transactions`}}}}});
